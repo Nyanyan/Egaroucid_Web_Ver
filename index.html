@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>wasmtest</title>
+</head>
+<body>
+    <script type='text/javascript'>
+    var Module = {
+            preRun: [],
+            postRun: [],
+            print: (function() {
+            return function(text) {
+                if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+                console.log(text);
+            };
+            })(),
+            printErr: function(text) {
+            if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+                //console.log(text);
+            },
+            totalDependencies: 0,
+            monitorRunDependencies: function(left) {
+            this.totalDependencies = Math.max(this.totalDependencies, left);
+            }
+    };
+    console.log('Downloading...');
+    window.onerror = function(event) {
+        // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
+    };
+    </script>
+    <script type="text/javascript" src="ai.js"></script>
+</body>
+</html>
