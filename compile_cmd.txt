@@ -1,1 +1,1 @@
-em++ ai_compress.cpp -s WASM=1 -o ai.js -s TOTAL_MEMORY=78643200 -s EXIT_RUNTIME=1 -s "EXPORTED_FUNCTIONS=['_ai', '_init_ai', '_malloc', '_free']"
+em++ ai_compress.cpp -s WASM=1 -o ai.js -s EXIT_RUNTIME=1 -s "EXPORTED_FUNCTIONS=['_ai', '_init_ai', '_malloc', '_free']" -O3 -funroll-loops -flto -s TOTAL_MEMORY=78643200

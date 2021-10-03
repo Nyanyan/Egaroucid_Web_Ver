@@ -59,15 +59,8 @@ var graph = new Chart(ctx, {
 });
 
 function start() {
-    var data_json = {};
-    data_json["a"] = 1;
-    $.ajax({
-        type: "POST",
-        url: "/start",
-        data: data_json,
-        async: false,
-        dataType: "json",
-    });
+    document.getElementById('start').disabled = true;
+    _init_ai();
     ai_player = -1;
     let players = document.getElementsByName('ai_player');
     for (var i = 0; i < 2; ++i) {
@@ -85,7 +78,6 @@ function start() {
             tl_idx = i;
         }
     }
-    document.getElementById('start').disabled = true;
     show(-1, -1);
     if (ai_player == 0) {
         ai();
@@ -252,6 +244,7 @@ function ai() {
 }
 
 window.onload = function init() {
+    document.getElementById('start').disabled = true;
     grid[3][3] = 1
     grid[3][4] = 0
     grid[4][3] = 0
@@ -306,7 +299,7 @@ window.onload = function init() {
         table.appendChild(row);
     }
     show(-2, -2);
-    _init_ai();
+    document.getElementById('start').disabled = false;
 }
 
 function move(y, x) {

@@ -1,8 +1,3 @@
-#pragma GCC target("avx2")
-#pragma GCC optimize("O3")
-#pragma GCC optimize("unroll-loops")
-#pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx")
-
 // Egaroucid2
 
 #include <iostream>
@@ -32,7 +27,7 @@ using namespace std;
 #define hash_table_size 16384
 #define hash_mask (hash_table_size - 1)
 
-#define evaluate_count 10000
+#define evaluate_count 1000
 #define c_puct 2.0
 #define c_end 1.0
 #define c_value 0.5
@@ -57,86 +52,10 @@ using namespace std;
 
 #define compress_digit 3
 
-struct node_t{
-    int k[hw];
-    int p;
-    double v;
-    node_t* p_n_node;
-};
-
 struct book_elem{
     int p;
     double v;
 };
-
-inline int calc_hash(const int *p){
-    int seed = 0;
-    for (int i = 0; i < hw; ++i)
-        seed ^= p[i] << (i / 4);
-    return seed & hash_mask;
-}
-
-inline void hash_table_init(node_t** hash_table){
-    for(int i = 0; i < hash_table_size; ++i)
-        hash_table[i] = NULL;
-}
-
-inline node_t* node_init(const int *key, double value, int policy){
-    node_t* p_node = NULL;
-    p_node = (node_t*)malloc(sizeof(node_t));
-    for (int i = 0; i < hw; ++i)
-        p_node->k[i] = key[i];
-    p_node->v = value;
-    p_node->p = policy;
-    p_node->p_n_node = NULL;
-    return p_node;
-}
-
-inline bool compare_key(const int *a, const int *b){
-    for (int i = 0; i < hw; ++i){
-        if (a[i] != b[i])
-            return false;
-    }
-    return true;
-}
-
-inline void register_hash(node_t** hash_table, const int *key, int hash, double value, int policy){
-    if(hash_table[hash] == NULL){
-        hash_table[hash] = node_init(key, value, policy);
-    } else {
-        node_t *p_node = p_node = hash_table[hash];
-        node_t *p_pre_node = NULL;
-        p_pre_node = p_node;
-        while(p_node != NULL){
-            if(compare_key(key, p_node->k)){
-                if (p_node->v < value){
-                    p_node->v = value;
-                    p_node->p = policy;
-                }
-                return;
-            }
-            p_pre_node = p_node;
-            p_node = p_node->p_n_node;
-        }
-        p_pre_node->p_n_node = node_init(key, value, policy);
-    }
-}
-
-inline book_elem get_val_hash(node_t** hash_table, const int *key, int hash){
-    node_t *p_node = hash_table[hash];
-    book_elem res;
-    while(p_node != NULL){
-        if(compare_key(key, p_node->k)){
-            res.p = p_node->p;
-            res.v = p_node->v;
-            return res;
-        }
-        p_node = p_node->p_n_node;
-    }
-    res.p = -1;
-    res.v = -inf;
-    return res;
-}
 
 struct board_param{
     unsigned long long trans[board_index_num][6561][hw];
@@ -163,21 +82,9 @@ struct eval_param{
     double avg_canput[hw2];
     int canput[6561];
     int cnt_p[6561], cnt_o[6561];
-    double weight_p[hw][6561], weight_o[hw][6561];
-    int confirm_p[6561], confirm_o[6561];
-    int pot_canput_p[6561], pot_canput_o[6561];
     double open_eval[40];
-    double x_corner_p[6561], x_corner_o[6561];
-    double c_a_b_p[6561], c_a_b_o[6561];
     double tanh_arr[n_div];
     double exp_arr[n_div];
-
-    double input_board[n_board_input][hw + conv_padding2][hw + conv_padding2];
-    double hidden_conv1[n_kernels][hw + conv_padding2][hw + conv_padding2];
-    double hidden_conv2[n_kernels][hw + conv_padding2][hw + conv_padding2];
-    double after_conv[n_kernels];
-    double hidden1[64];
-    double hidden2[64];
 
     double conv1[n_kernels][n_board_input][kernel_size][kernel_size];
     double conv_residual[n_residual][n_kernels][n_kernels][kernel_size][kernel_size];
@@ -194,21 +101,6 @@ struct eval_param{
     double bias3_value;
 };
 
-struct hash_pair {
-    static size_t m_hash_pair_random;
-    template<class T1, class T2>
-    size_t operator()(const pair<T1, T2> &p) const {
-        auto hash1 = hash<T1>{}(p.first);
-        auto hash2 = hash<T2>{}(p.second);
-        size_t seed = 0;
-        seed ^= hash1 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        seed ^= hash2 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        seed ^= m_hash_pair_random + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        return seed;
-    }
-};
-size_t hash_pair::m_hash_pair_random = (size_t) random_device()();
-
 struct search_param{
     int max_depth;
     long long strt, tl;
@@ -216,8 +108,6 @@ struct search_param{
     int searched_nodes;
     vector<int> vacant_lst;
     int vacant_cnt;
-    //unordered_map<pair<unsigned long long, unsigned long long>, book_elem, hash_pair> book;
-    node_t *book[hash_table_size];
 };
 
 struct board_priority_move{
@@ -264,25 +154,6 @@ board_param board_param;
 eval_param eval_param;
 search_param search_param;
 mcts_param mcts_param;
-
-int xorx=123456789, xory=362436069, xorz=521288629, xorw=88675123;
-inline double myrandom(){
-    int t = (xorx^(xorx<<11));
-    xorx = xory;
-    xory = xorz;
-    xorz = xorw;
-    xorw = xorw=(xorw^(xorw>>19))^(t^(t>>8));
-    return (double)(xorw) / 2147483648.0;
-}
-
-inline int myrandom_int(){
-    int t = (xorx^(xorx<<11));
-    xorx = xory;
-    xory = xorz;
-    xorz = xorw;
-    xorw = xorw=(xorw^(xorw>>19))^(t^(t>>8));
-    return xorw;
-}
 
 inline long long tim(){
     //return static_cast<int>(chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count());
@@ -436,12 +307,6 @@ extern "C" int init_ai(){
         1, 4, 5, 6, 6, 5, 4, 1,
         0, 1, 2, 3, 3, 2, 1, 0
     };
-    const double params[10] = {
-        0.2880, -0.1150, 0.0000, -0.0096,
-                -0.1542, -0.0288, -0.0288,
-                        0.0000, -0.0096,
-                                -0.0096,
-    };
     const int consts[476] = {
         8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61,
         62, 63, 0, 8, 16, 24, 32, 40, 48, 56, 1, 9, 17, 25, 33, 41, 49, 57, 2, 10, 18, 26, 34, 42, 50, 58, 3, 11, 19, 27, 35, 43, 51, 59, 4, 12, 20, 28, 36, 44, 52, 60, 5, 13, 21, 29, 37, 45, 53, 61, 6, 14, 22, 30, 38, 46, 54, 62, 7, 15, 23, 31, 39, 47, 55, 63, 5, 14, 23, 4, 13, 22, 31, 3, 12, 21, 30, 39, 2, 11, 20, 29, 38, 47, 1, 10, 19, 28, 37, 46, 55, 0, 9, 18, 27, 36, 45, 54, 63, 8,
@@ -449,26 +314,9 @@ extern "C" int init_ai(){
         56, 49, 49, 56, 48, 40, 32, 24, 16, 8, 0, 9, 9, 0, 1, 2, 3, 4, 5, 6, 7, 14, 14, 7, 15, 23, 31, 39, 47, 55, 63, 54, 3, 2, 1, 0, 9, 8, 16, 24, 4, 5, 6, 7, 14, 15, 23, 31, 60, 61, 62, 63, 54, 55, 47, 39, 59, 58, 57, 56, 49, 48, 40, 32, 0, 1, 2, 3, 8, 9, 10, 11, 0, 8, 16, 24, 1, 9, 17, 25, 7, 6, 5, 4, 15, 14, 13, 12, 7, 15, 23, 31, 6, 14, 22, 30, 63, 62, 61, 60,
         55, 54, 53, 52, 63, 55, 47, 39, 62, 54, 46, 38, 56, 57, 58, 59, 48, 49, 50, 51, 56, 48, 40, 32, 57, 49, 41, 33, 0, 9, 18, 27, 36, 45, 54, 63, 7, 14, 21, 28, 35, 42, 49, 56, 0, 1, 2, 3, 4, 5, 6, 7, 7, 15, 23, 31, 39, 47, 55, 63, 63, 62, 61, 60, 59, 58, 57, 56, 56, 48, 40, 32, 24, 26, 8, 0
     };
-    //const string super_compress_pattern = "";
-    //const double compress_vals[char_e - char_s + 1] = 
-    //    {-0.99191575, -0.955417, -0.925217, -0.87192775, -0.8353087499999999, -0.79376225, -0.7521912222222222, -0.7211734999999999, -0.6842236666666666, -0.6495354444444446, -0.6066062333333334, -0.5705911935483873, -0.5333852142857143, -0.4977529599999999, -0.4617034339622642, -0.4280493521126759, -0.3930658846153848, -0.3562839680851063, -0.32210842748091595, -0.28638591366906474, -0.25082044382022484, -0.2177653593073593, -0.18336263157894744, -0.14849799452054788, -0.11322629255319143, -0.07861064571428576, -0.044194587947882745, -0.009447826356589157, 0.0, 0.02449980906148867, 0.058887281355932165, 0.09310184199134201, 0.1286132636103152, 0.16182661875000015, 0.19795722314049594, 0.23227418264840172, 0.267653596153846, 0.30229703875969, 0.33605759829059817, 0.3711898414634147, 0.40819006249999995, 0.44264849206349216, 0.4775844999999999, 0.5102675952380951, 0.54893288, 0.5832057878787877, 0.6154508, 0.6539295789473684, 0.6925377777777778, 0.734762625, 0.7674997500000001, 0.7988967777777778, 0.83530875, 0.87192775, 0.9324133333333333, 0.9774676666666666, 0.999644};
-    const double avg_canput[hw2] = {
-        0.00, 0.00, 0.00, 0.00, 4.00, 3.00, 4.00, 2.00,
-        9.00, 5.00, 6.00, 6.00, 5.00, 8.38, 5.69, 9.13,
-        5.45, 6.98, 6.66, 9.38, 6.98, 9.29, 7.29, 9.32, 
-        7.37, 9.94, 7.14, 9.78, 7.31, 10.95, 7.18, 9.78, 
-        7.76, 9.21, 7.33, 8.81, 7.20, 8.48, 7.23, 8.00, 
-        6.92, 7.57, 6.62, 7.13, 6.38, 6.54, 5.96, 6.18, 
-        5.62, 5.64, 5.18, 5.18, 4.60, 4.48, 4.06, 3.67, 
-        3.39, 3.11, 2.66, 2.30, 1.98, 1.53, 1.78, 0.67
-    };
     const string param_compressed = 
 REPLACE_PARAM_HERE
 
-    for (i = 0; i < hw2; ++i)
-        eval_param.avg_canput[i] = avg_canput[i];
-    for (i = 0; i < hw2; i++)
-        eval_param.weight[i] = params[translate[i]];
     int all_idx = 0;
     for (i = 0; i < board_index_num; ++i)
         board_param.pattern_space[i] = consts[all_idx++];
@@ -586,42 +434,6 @@ REPLACE_PARAM_HERE
             eval_param.cnt_p[i] += board_param.restore_p[i][j];
             eval_param.cnt_o[i] += board_param.restore_o[i][j];
         }
-        eval_param.x_corner_p[i] = 0.0;
-        if (((~p & 1) & ((p >> 1) & 1)) & 1)
-            eval_param.x_corner_p[i] += 1.0;
-        if (((~(p >> 7) & 1) & ((p >> 6) & 1)) & 1)
-            eval_param.x_corner_p[i] += 1.0;
-        eval_param.x_corner_o[i] = 0.0;
-        if (((~o & 1) & ((o >> 1) & 1)) & 1)
-            eval_param.x_corner_o[i] += 1.0;
-        if (((~(o >> 7) & 1) & ((o >> 6) & 1)) & 1)
-            eval_param.x_corner_o[i] += 1.0;
-        eval_param.c_a_b_p[i] = 0.0;
-        if (((~p & 1) & ((p >> 1) & 1)) & 1){
-            if (~(p >> 2) & 1)
-                eval_param.c_a_b_p[i] += 1.0;
-            if (~(p >> 3) & 1)
-                eval_param.c_a_b_p[i] += 1.0;
-        }
-        if (((~(p >> 7) & 1) & ((p >> 6) & 1)) & 1){
-            if (~(p >> 5) & 1)
-                eval_param.c_a_b_p[i] += 1.0;
-            if (~(p >> 4) & 1)
-                eval_param.c_a_b_p[i] += 1.0;
-        }
-        eval_param.c_a_b_o[i] = 0.0;
-        if (((~o & 1) & ((o >> 1) & 1)) & 1){
-            if (~(o >> 2) & 1)
-                eval_param.c_a_b_o[i] += 1.0;
-            if (~(o >> 3) & 1)
-                eval_param.c_a_b_o[i] += 1.0;
-        }
-        if (((~(o >> 7) & 1) & ((o >> 6) & 1)) & 1){
-            if (~(o >> 5) & 1)
-                eval_param.c_a_b_o[i] += 1.0;
-            if (~(o >> 4) & 1)
-                eval_param.c_a_b_o[i] += 1.0;
-        }
         mobility = check_mobility(p, o);
         canput_num = 0;
         for (j = 0; j < hw; ++j){
@@ -647,7 +459,6 @@ REPLACE_PARAM_HERE
             } else
                 board_param.legal[i][j] = false;
         }
-        eval_param.canput[i] = canput_num;
     }
     for (i = 0; i < hw2; ++i){
         board_param.put_idx_num[i] = 0;
@@ -662,90 +473,6 @@ REPLACE_PARAM_HERE
         for (j = 0; j < 8; ++j){
             board_param.rev_bit3[i][j] = board_param.pow3[j] * (2 - (i / board_param.pow3[j]) % 3);
             board_param.pop_digit[i][j] = i / board_param.pow3[j] % 3;
-        }
-    }
-    for (i = 0; i < hw; ++i){
-        for (j = 0; j < 6561; ++j){
-            eval_param.weight_p[i][j] = 0.0;
-            eval_param.weight_o[i][j] = 0.0;
-            for (k = 0; k < 8; ++k){
-                if (board_param.pop_digit[j][k] == 1)
-                    eval_param.weight_p[i][j] += eval_param.weight[i * hw + k];
-                else if (board_param.pop_digit[j][k] == 2)
-                    eval_param.weight_o[i][j] += eval_param.weight[i * hw + k];
-            }
-        }
-    }
-    bool flag;
-    for (i = 0; i < 6561; ++i){
-        eval_param.confirm_p[i] = 0;
-        eval_param.confirm_o[i] = 0;
-        flag = true;
-        for (j = 0; j < hw; ++j)
-            if (!board_param.pop_digit[i][j])
-                flag = false;
-        if (flag){
-            for (j = 0; j < hw; ++j){
-                if (board_param.pop_digit[i][j] == 1)
-                    ++eval_param.confirm_p[i];
-                else
-                    ++eval_param.confirm_o[i];
-            }
-        } else {
-            flag = true;
-            for (j = 0; j < hw; ++j){
-                if (board_param.pop_digit[i][j] != 1)
-                    break;
-                ++eval_param.confirm_p[i];
-                if (k == hw_m1)
-                    flag = false;
-            }
-            if (flag){
-                for (j = hw_m1; j >= 0; --j){
-                    if (board_param.pop_digit[i][j] != 1)
-                        break;
-                    ++eval_param.confirm_p[i];
-                    if (k == hw_m1)
-                        flag = false;
-                }
-            }
-            flag = true;
-            for (j = 0; j < hw; ++j){
-                if (board_param.pop_digit[i][j] != 2)
-                    break;
-                ++eval_param.confirm_o[i];
-                if (k == hw_m1)
-                    flag = false;
-            }
-            if (flag){
-                for (j = hw_m1; j >= 0; --j){
-                    if (board_param.pop_digit[i][j] != 2)
-                        break;
-                    ++eval_param.confirm_o[i];
-                    if (k == hw_m1)
-                        flag = false;
-                }
-            }
-        }
-    }
-    for (i = 0; i < 6561; ++i){
-        eval_param.pot_canput_p[i] = 0;
-        eval_param.pot_canput_o[i] = 0;
-        for (j = 0; j < hw_m1; ++j){
-            if (board_param.pop_digit[i][j] == 0){
-                if (board_param.pop_digit[i][j + 1] == 2)
-                    ++eval_param.pot_canput_p[i];
-                else if (board_param.pop_digit[i][j + 1] == 1)
-                    ++eval_param.pot_canput_o[i];
-            }
-        }
-        for (j = 1; j < hw; ++j){
-            if (board_param.pop_digit[i][j] == 0){
-                if (board_param.pop_digit[i][j - 1] == 2)
-                    ++eval_param.pot_canput_p[i];
-                else if (board_param.pop_digit[i][j - 1] == 1)
-                    ++eval_param.pot_canput_o[i];
-            }
         }
     }
     for (i = 0; i < 3; ++i){
@@ -769,6 +496,7 @@ REPLACE_PARAM_HERE
         }
     }
     board_param.direction = -1;
+    cout << "initialized" << endl;
     return 0;
 }
 
@@ -777,44 +505,49 @@ inline double leaky_relu(double x){
 }
 
 inline predictions predict(const int *board){
-    int i, j, k, sy, sx, y, x, residual_i;
+    int i, j, k, sy, sx, y, x, coord1, coord2, residual_i;
     predictions res;
+    double input_board[n_board_input][hw + conv_padding2][hw + conv_padding2];
+    double hidden_conv1[n_kernels][hw + conv_padding2][hw + conv_padding2];
+    double hidden_conv2[n_kernels][hw + conv_padding2][hw + conv_padding2];
+    double after_conv[n_kernels];
+    double hidden1[64];
+    double hidden2[64];
     // reshape input
     for (i = 0; i < hw; ++i){
         for (j = 0; j < hw; ++j){
-            eval_param.input_board[0][i + conv_padding][j + conv_padding] = board_param.restore_p[board[i]][j];
-            eval_param.input_board[1][i + conv_padding][j + conv_padding] = board_param.restore_o[board[i]][j];
-            eval_param.input_board[2][i + conv_padding][j + conv_padding] = board_param.restore_vacant[board[i]][j];
+            input_board[0][i + conv_padding][j + conv_padding] = board_param.restore_p[board[i]][j];
+            input_board[1][i + conv_padding][j + conv_padding] = board_param.restore_o[board[i]][j];
+            input_board[2][i + conv_padding][j + conv_padding] = board_param.restore_vacant[board[i]][j];
         }
         for (j = 0; j < hw + conv_padding2; ++j){
             for (k = 0; k < n_board_input; ++k){
-                eval_param.input_board[k][0][j] = 0.0;
-                eval_param.input_board[k][hw_m1 + conv_padding2][j] = 0.0;
-                eval_param.input_board[k][j][0] = 0.0;
-                eval_param.input_board[k][j][hw_m1 + conv_padding2] = 0.0;
+                input_board[k][0][j] = 0.0;
+                input_board[k][hw_m1 + conv_padding2][j] = 0.0;
+                input_board[k][j][0] = 0.0;
+                input_board[k][j][hw_m1 + conv_padding2] = 0.0;
             }
         }
     }
-
     // conv and normalization and leaky-relu
     for (i = 0; i < n_kernels; ++i){
         for (y = 0; y < hw + conv_padding2; ++y){
             for (x = 0; x < hw + conv_padding2; ++x)
-                eval_param.hidden_conv1[i][y][x] = 0.0;
+                hidden_conv1[i][y][x] = 0.0;
         }
         for (j = 0; j < n_board_input; ++j){
             for (sy = 0; sy < hw; ++sy){
                 for (sx = 0; sx < hw; ++sx){
                     for (y = 0; y < kernel_size; ++y){
                         for (x = 0; x < kernel_size; ++x)
-                            eval_param.hidden_conv1[i][sy + conv_padding][sx + conv_padding] += eval_param.conv1[i][j][y][x] * eval_param.input_board[j][sy + y][sx + x];
+                            hidden_conv1[i][sy + conv_padding][sx + conv_padding] += eval_param.conv1[i][j][y][x] * input_board[j][sy + y][sx + x];
                     }
                 }
             }
         }
         for (y = conv_padding; y < hw + conv_padding; ++y){
             for (x = conv_padding; x < hw + conv_padding; ++x)
-                eval_param.hidden_conv1[i][y][x] = leaky_relu(eval_param.hidden_conv1[i][y][x]);
+                hidden_conv1[i][y][x] = leaky_relu(hidden_conv1[i][y][x]);
         }
     }
     // residual-error-block
@@ -822,14 +555,14 @@ inline predictions predict(const int *board){
         for (i = 0; i < n_kernels; ++i){
             for (y = 0; y < hw + conv_padding2; ++y){
                 for (x = 0; x < hw + conv_padding2; ++x)
-                    eval_param.hidden_conv2[i][y][x] = 0.0;
+                    hidden_conv2[i][y][x] = 0.0;
             }
             for (j = 0; j < n_kernels; ++j){
                 for (sy = 0; sy < hw; ++sy){
                     for (sx = 0; sx < hw; ++sx){
                         for (y = 0; y < kernel_size; ++y){
                             for (x = 0; x < kernel_size; ++x)
-                                eval_param.hidden_conv2[i][sy + conv_padding][sx + conv_padding] += eval_param.conv_residual[residual_i][i][j][y][x] * eval_param.hidden_conv1[j][sy + y][sx + x];
+                                hidden_conv2[i][sy + conv_padding][sx + conv_padding] += eval_param.conv_residual[residual_i][i][j][y][x] * hidden_conv1[j][sy + y][sx + x];
                         }
                     }
                 }
@@ -838,52 +571,52 @@ inline predictions predict(const int *board){
         for (i = 0; i < n_kernels; ++i){
             for (y = conv_padding; y < hw + conv_padding; ++y){
                 for (x = conv_padding; x < hw + conv_padding; ++x)
-                    eval_param.hidden_conv1[i][y][x] = leaky_relu(eval_param.hidden_conv1[i][y][x] + eval_param.hidden_conv2[i][y][x]);
+                    hidden_conv1[i][y][x] = leaky_relu(hidden_conv1[i][y][x] + hidden_conv2[i][y][x]);
             }
         }
     }
     // global-average-pooling
     for (i = 0; i < n_kernels; ++i){
-        eval_param.after_conv[i] = 0.0;
+        after_conv[i] = 0.0;
         for (y = 0; y < hw; ++y){
             for (x = 0; x < hw; ++x)
-                eval_param.after_conv[i] += eval_param.hidden_conv1[i][y + conv_padding][x + conv_padding];
+                after_conv[i] += hidden_conv1[i][y + conv_padding][x + conv_padding];
         }
-        eval_param.after_conv[i] /= hw2;
+        after_conv[i] /= hw2;
     }
 
     // dense1 for policy
     for (j = 0; j < n_dense1_policy; ++j){
-        eval_param.hidden1[j] = eval_param.bias1_policy[j];
+        hidden1[j] = eval_param.bias1_policy[j];
         for (i = 0; i < n_kernels; ++i)
-            eval_param.hidden1[j] += eval_param.dense1_policy[i][j] * eval_param.after_conv[i];
-        eval_param.hidden1[j] = leaky_relu(eval_param.hidden1[j]);
+            hidden1[j] += eval_param.dense1_policy[i][j] * after_conv[i];
+        hidden1[j] = leaky_relu(hidden1[j]);
     }
     // dense2 for policy
     for (j = 0; j < hw2; ++j){
         res.policies[j] = eval_param.bias2_policy[j];
         for (i = 0; i < n_dense1_policy; ++i)
-            res.policies[j] += eval_param.dense2_policy[i][j] * eval_param.hidden1[i];
+            res.policies[j] += eval_param.dense2_policy[i][j] * hidden1[i];
     }
 
     // dense1 for value
     for (j = 0; j < n_dense1_value; ++j){
-        eval_param.hidden2[j] = eval_param.bias1_value[j];
+        hidden2[j] = eval_param.bias1_value[j];
         for (i = 0; i < n_kernels; ++i)
-            eval_param.hidden2[j] += eval_param.dense1_value[i][j] * eval_param.after_conv[i];
-        eval_param.hidden1[j] = leaky_relu(eval_param.hidden2[j]);
+            hidden2[j] += eval_param.dense1_value[i][j] * after_conv[i];
+        hidden1[j] = leaky_relu(hidden2[j]);
     }
     // dense2 for value
     for (j = 0; j < n_dense2_value; ++j){
-        eval_param.hidden2[j] = eval_param.bias2_value[j];
+        hidden2[j] = eval_param.bias2_value[j];
         for (i = 0; i < n_dense1_value; ++i)
-            eval_param.hidden2[j] += eval_param.dense2_value[i][j] * eval_param.hidden1[i];
-        eval_param.hidden2[j] = leaky_relu(eval_param.hidden2[j]);
+            hidden2[j] += eval_param.dense2_value[i][j] * hidden1[i];
+        hidden2[j] = leaky_relu(hidden2[j]);
     }
     // dense3 for value
     res.value = eval_param.bias3_value;
     for (i = 0; i < n_dense2_value; ++i)
-        res.value += eval_param.dense3_value[i] * eval_param.hidden2[i];
+        res.value += eval_param.dense3_value[i] * hidden2[i];
     res.value = eval_param.tanh_arr[map_liner(res.value, tanh_min, tanh_max)];
 
     // return
@@ -1203,18 +936,6 @@ double evaluate(int idx, bool passed, int n_stones){
         mcts_param.nodes[idx].children[hw2] = -1;
         if (!mcts_param.nodes[idx].pass){
             //predict and create policy array
-            /*
-            if (n_stones > 7){
-                book_elem pol_val = get_val_hash(search_param.book, mcts_param.nodes[idx].board, calc_hash(mcts_param.nodes[idx].board));
-                if (pol_val.v != -inf){
-                    cout << ".";
-                    mcts_param.nodes[idx].w += c_value * pol_val.v;
-                    ++mcts_param.nodes[idx].n;
-                    mcts_param.nodes[idx].end = true;
-                    return c_value * pol_val.v;
-                }
-            }
-            */
             predictions pred = predict(mcts_param.nodes[idx].board);
             mcts_param.nodes[idx].w += c_value * pred.value;
             ++mcts_param.nodes[idx].n;
@@ -1381,7 +1102,7 @@ inline double complete(int *board){
     return 1000.0 * board_param.turn_board[board_param.direction][result.second] + 50.0 + 50.0 * result.first;
 }
 
-extern "C" double ai(int *arr_board, int tl){
+extern "C" double ai(int *arr_board, long long tl){
     int i, j, board_tmp, ai_player, policy;
     char elem;
     unsigned long long p, o;
@@ -1406,7 +1127,6 @@ extern "C" double ai(int *arr_board, int tl){
     search_param.vacant_lst = {};
     search_param.vacant_cnt = 0;
     if (board_param.direction == -1){
-        cout << "check direction ";
         for (i = 0; i < hw2; ++i){
             if (raw_board[i] != '.')
                 ++n_stones;
@@ -1428,7 +1148,6 @@ extern "C" double ai(int *arr_board, int tl){
             }
             n_stones = 0;
         }
-        cout << board_param.direction << endl;
     }
     for (i = 0; i < hw2; ++i){
         elem = raw_board[i];
