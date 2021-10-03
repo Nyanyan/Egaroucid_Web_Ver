@@ -759,7 +759,7 @@ extern "C" int init_ai(){
         eval_param.tanh_arr[i] = tanh(rev_map_liner(i, tanh_min, tanh_max));
         eval_param.exp_arr[i] = exp(rev_map_liner(i, exp_min, exp_max));
     }
-    for (i = 0; i < 100; ++i)
+    for (i = 0; i < 10000; ++i)
         mcts_param.sqrt_arr[i] = sqrt((double)i);
     for (i = 0; i < hw; ++i){
         for (j = 0; j < hw; ++j){
