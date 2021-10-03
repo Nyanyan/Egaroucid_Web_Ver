@@ -16,7 +16,7 @@ var player = 0;
 var ai_player = -1;
 var tl = 50;
 var tl_idx = -1;
-let tl_names = ['レベル-2', 'レベル-1', 'レベル1', 'レベル2', 'レベル3', 'レベル4', 'レベル5', 'レベル6', 'レベル7'];
+let tl_names = ['レベル1', 'レベル2', 'レベル3', 'レベル4', 'レベル5'];
 let record = [];
 var step = 0;
 var direction = -1;
@@ -60,7 +60,7 @@ var graph = new Chart(ctx, {
 
 function start() {
     document.getElementById('start').disabled = true;
-    _init_ai();
+    console.log(_init_ai());
     ai_player = -1;
     let players = document.getElementsByName('ai_player');
     for (var i = 0; i < 2; ++i) {
@@ -238,7 +238,7 @@ function ai() {
     var y = Math.floor(val / 1000.0 / hw);
     var x = Math.floor((val - y * 1000.0 * hw) / 1000.0);
     var win_rate = val - y * 1000.0 * hw - x * 1000.0;
-    console.log(y + " " + x + " " + win_rate)
+    //console.log(y + " " + x + " " + win_rate);
     move(y, x);
     update_graph(win_rate);
 }

@@ -22,12 +22,11 @@ using namespace std;
 #define inf 100000.0
 #define board_index_num 38
 
-#define complete_stones 12
+#define complete_stones 10
 #define simple_threshold 3
 #define hash_table_size 16384
 #define hash_mask (hash_table_size - 1)
 
-#define evaluate_count 1000
 #define c_puct 2.0
 #define c_end 1.0
 #define c_value 0.5
@@ -108,6 +107,7 @@ struct search_param{
     int searched_nodes;
     vector<int> vacant_lst;
     int vacant_cnt;
+    int evaluate_count;
 };
 
 struct board_priority_move{
@@ -140,7 +140,7 @@ struct mcts_node{
 };
 
 struct mcts_param{
-    mcts_node nodes[2 * evaluate_count];
+    mcts_node nodes[10000];
     int used_idx;
     double sqrt_arr[100];
 };
@@ -284,13 +284,13 @@ int board_reverse(int idx){
 }
 
 constexpr int ln_char = 91;
-constexpr double compress_bias = 15.08195;
+constexpr double compress_bias = 21.32882;
 const string chars = "!#$&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 double pow_ln_char[3] = {1.0, 0.01098901, 0.00012076};
 unordered_map<char, double> char_keys;
 
 inline double unzip_element(char a, char b, char c){
-    return char_keys[a] + char_keys[b] * 0.01098901 + char_keys[c] * 0.00012076;
+    return char_keys[a] + char_keys[b] * 0.01098901 + char_keys[c] * 0.00012076 - compress_bias;
 }
 
 extern "C" int init_ai(){
@@ -957,7 +957,7 @@ double evaluate(int idx, bool passed, int n_stones){
             value = c_value * predict(mcts_param.nodes[idx].board).value;
             mcts_param.nodes[idx].w += value;
             ++mcts_param.nodes[idx].n;
-            return c_value * value;
+            return value;
         }
     }
     if ((!mcts_param.nodes[idx].pass) && (!mcts_param.nodes[idx].end)){
@@ -1064,11 +1064,8 @@ inline int next_action(int *board){
     for (i = 0; i < hw; ++i)
         n_stones += eval_param.cnt_p[board[i]] + eval_param.cnt_o[board[i]];
     long long strt = tim();
-    for (i = 0; i < evaluate_count; ++i){
+    for (i = 0; i < search_param.evaluate_count; ++i)
         evaluate(0, false, n_stones);
-        if (tim() - strt > search_param.tl)
-            break;
-    }
     for (i = 0; i < hw2; ++i){
         if (legal[i]){
             if (mcts_param.nodes[0].children[i] != -1){
@@ -1102,14 +1099,14 @@ inline double complete(int *board){
     return 1000.0 * board_param.turn_board[board_param.direction][result.second] + 50.0 + 50.0 * result.first;
 }
 
-extern "C" double ai(int *arr_board, long long tl){
+extern "C" double ai(int *arr_board, int evaluate_count){
     int i, j, board_tmp, ai_player, policy;
     char elem;
     unsigned long long p, o;
     int n_stones;
     int board[board_index_num];
     double rnd, sm;
-    search_param.tl = tl;
+    search_param.evaluate_count = evaluate_count;
     string raw_board;
     for (i = 0; i < hw2; ++i){
         if (arr_board[i] == 0)
@@ -1119,7 +1116,7 @@ extern "C" double ai(int *arr_board, long long tl){
         else
             raw_board += ".";
     }
-    cout << raw_board << " " << tl << endl;
+    cout << raw_board << " " << evaluate_count << endl;
     search_param.turn = 0;
     p = 0;
     o = 0;
@@ -1174,8 +1171,10 @@ extern "C" double ai(int *arr_board, long long tl){
         board[i] = board_tmp;
     }
     if (n_stones < hw2 - complete_stones){
+        cout << "MCTS" << endl;
         return mcts(board);
     } else{
+        cout << "NEGASCOUT" << endl;
         search_param.max_depth = hw2 + 1 - n_stones;
         return complete(board);
     }
