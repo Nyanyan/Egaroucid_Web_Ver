@@ -1373,6 +1373,13 @@ extern "C" double complete(){
     return 1000.0 * board_param.turn_board[board_param.direction][result.second] + 50.0 + 50.0 * result.first;
 }
 
+extern "C" double first(){
+    board_param.direction = 0;
+    cout << "FIRST" << endl;
+    cout << 4 << " " << 5 << " " << 50.0 << endl;
+    return 1000.0 * (4 * hw + 5) + 50.0;
+}
+
 extern "C" int start_ai(int *arr_board, int evaluate_count){
     int i, j, board_tmp, ai_player, policy;
     char elem;
@@ -1402,10 +1409,7 @@ extern "C" int start_ai(int *arr_board, int evaluate_count){
                 ++n_stones;
         }
         if (n_stones == 4){
-            board_param.direction = 0;
-            cout << "FIRST" << endl;
-            cout << 4 << " " << 5 << " " << 50.0 << endl;
-            return 1000.0 * (4 * hw + 5) + 50.0;
+            return 2;
         } else{
             string board_turns[4] = {
             "...........................01......111..........................",

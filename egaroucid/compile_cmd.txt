@@ -1,1 +1,1 @@
-em++ ai_compress.cpp -s WASM=1 -o ai.js -s EXIT_RUNTIME=1 -s "EXPORTED_FUNCTIONS=['_start_ai', '_init_ai', '_malloc', '_free', '_mcts_main', '_mcts_end', '_complete']" -O3 -s TOTAL_MEMORY=78643200
+em++ ai_compress.cpp -s WASM=1 -o ai.js -s EXIT_RUNTIME=1 -s "EXPORTED_FUNCTIONS=['_start_ai', '_init_ai', '_malloc', '_free', '_mcts_main', '_mcts_end', '_complete', '_first']" -O3 -s TOTAL_MEMORY=78643200

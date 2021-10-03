@@ -82,9 +82,6 @@ function start() {
         }
     }
     show(-1, -1);
-    if (ai_player == 0) {
-        ai();
-    }
 }
 
 function show(r, c) {
@@ -266,6 +263,7 @@ function ai() {
     HEAP32.set(res, offset);
     var mode = _start_ai(pointer, tl_div);
     _free(pointer);
+    console.log('mode', mode);
     var val = -1.0;
     var progress = document.getElementById("progress");
     progress.value = 0;
@@ -273,13 +271,18 @@ function ai() {
         mcts_progress = 0;
         interval_id = setInterval(mcts_main, 10, progress);
     } else {
-        val = _complete();
+        if (mode == 1) {
+            val = _complete();
+        } else {
+            val = _first();
+        }
         var y = Math.floor(val / 1000.0 / hw);
         var x = Math.floor((val - y * 1000.0 * hw) / 1000.0);
         var win_rate = val - y * 1000.0 * hw - x * 1000.0;
         //console.log(y + " " + x + " " + win_rate);
         move(y, x);
         update_graph(win_rate);
+        console.log('ai', ai_player, 'pl', player);
     }
 }
 
