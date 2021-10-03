@@ -30,6 +30,7 @@ using namespace std;
 #define c_puct 2.0
 #define c_end 1.0
 #define c_value 0.75
+#define c_prev 0.5
 #define mcts_complete_stones 8
 
 #define n_board_input 3
@@ -51,10 +52,70 @@ using namespace std;
 
 #define compress_digit 3
 
-struct book_elem{
-    int p;
+struct node_t{
+    int k[hw];
     double v;
+    node_t* p_n_node;
 };
+
+inline int calc_hash(const int *p){
+    int seed = 0;
+    for (int i = 0; i < hw; ++i)
+        seed ^= p[i] << (i / 4);
+    return seed & hash_mask;
+}
+
+inline void hash_table_init(node_t** hash_table){
+    for(int i = 0; i < hash_table_size; ++i)
+        hash_table[i] = NULL;
+}
+
+inline node_t* node_init(const int *key, double val){
+    node_t* p_node = NULL;
+    p_node = (node_t*)malloc(sizeof(node_t));
+    for (int i = 0; i < hw; ++i)
+        p_node->k[i] = key[i];
+    p_node->v = val;
+    p_node->p_n_node = NULL;
+    return p_node;
+}
+
+inline bool compare_key(const int *a, const int *b){
+    for (int i = 0; i < hw; ++i){
+        if (a[i] != b[i])
+            return false;
+    }
+    return true;
+}
+
+inline void register_hash(node_t** hash_table, const int *key, int hash, double val){
+    if(hash_table[hash] == NULL){
+        hash_table[hash] = node_init(key, val);
+    } else {
+        node_t *p_node = p_node = hash_table[hash];
+        node_t *p_pre_node = NULL;
+        p_pre_node = p_node;
+        while(p_node != NULL){
+            if(compare_key(key, p_node->k)){
+                p_node->v = val;
+                return;
+            }
+            p_pre_node = p_node;
+            p_node = p_node->p_n_node;
+        }
+        p_pre_node->p_n_node = node_init(key, val);
+    }
+}
+
+inline double get_val_hash(node_t** hash_table, const int *key, int hash){
+    node_t *p_node = hash_table[hash];
+    while(p_node != NULL){
+        if(compare_key(key, p_node->k))
+            return p_node->v;
+        p_node = p_node->p_n_node;
+    }
+    return -inf;
+}
 
 struct board_param{
     unsigned long long trans[board_index_num][6561][hw];
@@ -135,6 +196,7 @@ struct mcts_node{
     int children[hw2_p1];
     double p[hw2];
     double w;
+    double pv;
     int n;
     bool pass;
     bool expanded;
@@ -142,9 +204,10 @@ struct mcts_node{
 };
 
 struct mcts_param{
-    mcts_node nodes[10000];
+    mcts_node nodes[20000];
+    node_t *prev_nodes[hash_table_size];
     int used_idx;
-    double sqrt_arr[10000];
+    double sqrt_arr[20000];
 };
 
 struct predictions{
@@ -759,7 +822,7 @@ extern "C" int init_ai(){
         eval_param.tanh_arr[i] = tanh(rev_map_liner(i, tanh_min, tanh_max));
         eval_param.exp_arr[i] = exp(rev_map_liner(i, exp_min, exp_max));
     }
-    for (i = 0; i < 10000; ++i)
+    for (i = 0; i < 20000; ++i)
         mcts_param.sqrt_arr[i] = sqrt((double)i);
     for (i = 0; i < hw; ++i){
         for (j = 0; j < hw; ++j){
@@ -770,6 +833,7 @@ extern "C" int init_ai(){
         }
     }
     board_param.direction = -1;
+    mcts_param.used_idx = 0;
     cout << "initialized" << endl;
     return 0;
 }
@@ -1224,6 +1288,9 @@ double evaluate(int idx, bool passed, int n_stones){
             }
             for (i = 0; i < hw2; ++i)
                 mcts_param.nodes[idx].p[i] /= p_sum;
+            double prev_value = get_val_hash(mcts_param.prev_nodes, mcts_param.nodes[idx].board, calc_hash(mcts_param.nodes[idx].board));
+            if (prev_value != -inf)
+                mcts_param.nodes[idx].pv = c_prev * prev_value;
             return c_value * pred.value;
         } else{
             for (i = 0; i < hw2; ++i)
@@ -1244,7 +1311,7 @@ double evaluate(int idx, bool passed, int n_stones){
         for (const int& cell : search_param.vacant_lst){
             if (mcts_param.nodes[idx].p[cell] != 0.0){
                 if (mcts_param.nodes[idx].children[cell] != -1)
-                    tmp_value = c_puct * mcts_param.nodes[idx].p[cell] * t_sqrt / (1 + mcts_param.nodes[mcts_param.nodes[idx].children[cell]].n) - mcts_param.nodes[mcts_param.nodes[idx].children[cell]].w / mcts_param.nodes[mcts_param.nodes[idx].children[cell]].n;
+                    tmp_value = c_puct * mcts_param.nodes[idx].p[cell] * t_sqrt / (1 + mcts_param.nodes[mcts_param.nodes[idx].children[cell]].n) - mcts_param.nodes[mcts_param.nodes[idx].children[cell]].w / mcts_param.nodes[mcts_param.nodes[idx].children[cell]].n - mcts_param.nodes[mcts_param.nodes[idx].children[cell]].pv;
                 else
                     tmp_value = c_puct * mcts_param.nodes[idx].p[cell] * t_sqrt;
                 if (value < tmp_value){
@@ -1257,6 +1324,7 @@ double evaluate(int idx, bool passed, int n_stones){
             mcts_param.nodes[idx].children[a_cell] = mcts_param.used_idx;
             mcts_param.nodes[mcts_param.used_idx].w = 0.0;
             mcts_param.nodes[mcts_param.used_idx].n = 0;
+            mcts_param.nodes[mcts_param.used_idx].pv = 0.5;
             mcts_param.nodes[mcts_param.used_idx].pass = true;
             mcts_param.nodes[mcts_param.used_idx].expanded = false;
             mcts_param.nodes[mcts_param.used_idx].end = false;
@@ -1274,6 +1342,7 @@ double evaluate(int idx, bool passed, int n_stones){
                 mcts_param.nodes[idx].children[hw2] = mcts_param.used_idx;
                 mcts_param.nodes[mcts_param.used_idx].w = 0.0;
                 mcts_param.nodes[mcts_param.used_idx].n = 0;
+                mcts_param.nodes[mcts_param.used_idx].pv = 0.5;
                 mcts_param.nodes[mcts_param.used_idx].pass = true;
                 mcts_param.nodes[mcts_param.used_idx].expanded = false;
                 mcts_param.nodes[mcts_param.used_idx].end = false;
@@ -1296,11 +1365,21 @@ double evaluate(int idx, bool passed, int n_stones){
 
 inline void mcts_init(){
     int i, cell;
+    hash_table_init(mcts_param.prev_nodes);
+    int num_registered = 0;
+    for (i = 0; i < mcts_param.used_idx; ++i){
+        if (mcts_param.nodes[i].n > 10){
+            ++num_registered;
+            register_hash(mcts_param.prev_nodes, mcts_param.nodes[i].board, calc_hash(mcts_param.nodes[i].board), mcts_param.nodes[i].w / mcts_param.nodes[i].n);
+        }
+    }
+    cout << num_registered << " items registered" << endl;
     mcts_param.used_idx = 1;
     for (i = 0; i < board_index_num; ++i)
         mcts_param.nodes[0].board[i] = board_param.board[i];
     mcts_param.nodes[0].w = 0.0;
     mcts_param.nodes[0].n = 0;
+    mcts_param.nodes[0].pv = 0.5;
     mcts_param.nodes[0].pass = true;
     mcts_param.nodes[0].expanded = true;
     mcts_param.nodes[0].end = false;
