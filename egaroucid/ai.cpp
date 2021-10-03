@@ -29,7 +29,7 @@ using namespace std;
 
 #define c_puct 2.0
 #define c_end 1.0
-#define c_value 0.5
+#define c_value 0.75
 #define mcts_complete_stones 8
 
 #define n_board_input 3
