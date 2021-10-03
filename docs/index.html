@@ -28,11 +28,13 @@
         </p>
         <p align="center">
             <span class="setting"><a href="#strength">AIの強さ</a></span>
-            <input type="radio" class="radio_size" name="tl" value="50" id="50"><label for="50" class="setting">レベル1</label>
-            <input type="radio" class="radio_size" name="tl" value="100" id="100"><label for="100" class="setting">レベル2</label>
-            <input type="radio" class="radio_size" name="tl" value="150" id="150" checked><label for="150" class="setting">レベル3</label>
-            <input type="radio" class="radio_size" name="tl" value="200" id="200"><label for="200" class="setting">レベル4</label>
-            <input type="radio" class="radio_size" name="tl" value="300" id="300"><label for="300" class="setting">レベル5</label>
+            <input type="radio" class="radio_size" name="tl" value="100" id="100" checked><label for="100" class="setting">レベル1</label>
+            <input type="radio" class="radio_size" name="tl" value="200" id="200"><label for="200" class="setting">レベル2</label>
+            <input type="radio" class="radio_size" name="tl" value="400" id="400"><label for="400" class="setting">レベル3</label>
+            <input type="radio" class="radio_size" name="tl" value="800" id="800"><label for="800" class="setting">レベル4</label>
+            <input type="radio" class="radio_size" name="tl" value="1600" id="1600"><label for="1600" class="setting">レベル5</label>
+            <input type="radio" class="radio_size" name="tl" value="3200" id="3200"><label for="3200" class="setting">レベル6</label>
+            <input type="radio" class="radio_size" name="tl" value="6400" id="6400"><label for="6400" class="setting">レベル7</label>
         </p>
         <div align="center">
             <input type="submit" class="setting" value="対局開始" onclick="start()" id="start">
@@ -40,7 +42,7 @@
         <div class="popup" id="js-popup">
             <div class="popup-inner">
                 <p align="center" class="sub_title" id="result_text"></p>
-                <a href="#"><img class="image" id="game_result" src=""></a>
+                <a href="#"><img class="image" id="game_result"></a>
                 <p align="center" class="hidden" id="tweet_result"></p>
                 <p align="center" class="text">上の画像は右クリックなどで保存できます。</p>
                 <div class="hidden" id="new_game"><p align="center" class="text"><a href="https://www.egaroucid.nyanyan.dev">新しい対局を開始(リロードします)</a></p></div>
@@ -68,6 +70,15 @@
                     <td class="status_cell"><span class="state_blank"></span></td>
                 </tr>
             </table>
+        </div>
+        <div align="center">
+            <label for="progress">
+                AIの進捗→
+            </label>
+            <progress value="0" max="100" id="progress">0%</progress>
+            <label for="progress">
+                ←AIの進捗
+            </label>
         </div>
         <div id="info" align="center">
             <div class="sub_title">対局情報</div>

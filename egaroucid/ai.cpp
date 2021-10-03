@@ -22,7 +22,7 @@ using namespace std;
 #define inf 100000.0
 #define board_index_num 38
 
-#define complete_stones 10
+#define complete_stones 12
 #define simple_threshold 3
 #define hash_table_size 16384
 #define hash_mask (hash_table_size - 1)
@@ -74,6 +74,8 @@ struct board_param{
     int restore_p[6561][hw], restore_o[6561][hw], restore_vacant[6561][hw];
     int turn_board[4][hw2];
     int direction;
+    int board[board_index_num];
+    int n_stones;
 };
 
 struct eval_param{
@@ -142,7 +144,7 @@ struct mcts_node{
 struct mcts_param{
     mcts_node nodes[10000];
     int used_idx;
-    double sqrt_arr[100];
+    double sqrt_arr[10000];
 };
 
 struct predictions{
@@ -909,10 +911,10 @@ double evaluate(int idx, bool passed, int n_stones){
     int i, j;
     if (n_stones >= hw2 - mcts_complete_stones){
         //int result = find_win(mcts_param.nodes[idx].board).first;
-        int result = nega_alpha_heavy(mcts_param.nodes[idx].board, search_param.max_depth, -1.1, 1.1, 0);
-        mcts_param.nodes[idx].w += c_end * (double)result;
+        double result = c_end * (double)nega_alpha_heavy(mcts_param.nodes[idx].board, search_param.max_depth, -1.1, 1.1, 0);
+        mcts_param.nodes[idx].w += result;
         ++mcts_param.nodes[idx].n;
-        return c_end * (double)result;
+        return result;
     }
     if (!mcts_param.nodes[idx].expanded){
         // when children not expanded
@@ -1020,11 +1022,11 @@ double evaluate(int idx, bool passed, int n_stones){
     return value;
 }
 
-inline int next_action(int *board){
-    int i, cell, mx = 0, res = -1;
+inline void mcts_init(){
+    int i, cell;
     mcts_param.used_idx = 1;
     for (i = 0; i < board_index_num; ++i)
-        mcts_param.nodes[0].board[i] = board[i];
+        mcts_param.nodes[0].board[i] = board_param.board[i];
     mcts_param.nodes[0].w = 0.0;
     mcts_param.nodes[0].n = 0;
     mcts_param.nodes[0].pass = true;
@@ -1037,7 +1039,7 @@ inline int next_action(int *board){
         legal[cell] = false;
         for (i = 0; i < board_index_num; ++i){
             if (board_param.put[cell][i] != -1){
-                if (board_param.legal[board[i]][board_param.put[cell][i]]){
+                if (board_param.legal[board_param.board[i]][board_param.put[cell][i]]){
                     mcts_param.nodes[0].pass = false;
                     legal[cell] = true;
                     break;
@@ -1046,7 +1048,7 @@ inline int next_action(int *board){
         }
     }
     //predict and create policy array
-    predictions pred = predict(board);
+    predictions pred = predict(board_param.board);
     mcts_param.nodes[0].w += pred.value;
     ++mcts_param.nodes[0].n;
     double p_sum = 0.0;
@@ -1060,35 +1062,35 @@ inline int next_action(int *board){
     }
     for (i = 0; i < hw2; ++i)
         mcts_param.nodes[0].p[i] /= p_sum;
-    int n_stones = 0;
+    board_param.n_stones = 0;
     for (i = 0; i < hw; ++i)
-        n_stones += eval_param.cnt_p[board[i]] + eval_param.cnt_o[board[i]];
-    long long strt = tim();
+        board_param.n_stones += eval_param.cnt_p[board_param.board[i]] + eval_param.cnt_o[board_param.board[i]];
+}
+
+extern "C" void mcts_main(){
+    int i;
     for (i = 0; i < search_param.evaluate_count; ++i)
-        evaluate(0, false, n_stones);
+        evaluate(0, false, board_param.n_stones);
+}
+
+extern "C" double mcts_end(){
+    int i, mx = -inf, policy;
     for (i = 0; i < hw2; ++i){
-        if (legal[i]){
-            if (mcts_param.nodes[0].children[i] != -1){
-                //cout << i << " " << mcts_param.nodes[mcts_param.nodes[0].children[i]].n << endl;
-                if (mx < mcts_param.nodes[mcts_param.nodes[0].children[i]].n){
-                    mx = mcts_param.nodes[mcts_param.nodes[0].children[i]].n;
-                    res = i;
-                }
+        if (mcts_param.nodes[0].children[i] != -1){
+            //cout << i << " " << mcts_param.nodes[mcts_param.nodes[0].children[i]].n << endl;
+            if (mx < mcts_param.nodes[mcts_param.nodes[0].children[i]].n){
+                mx = mcts_param.nodes[mcts_param.nodes[0].children[i]].n;
+                policy = i;
             }
         }
     }
-    return res;
-}
-
-inline double mcts(int *board){
-    int policy = next_action(board);
     cout << "SEARCH " << mcts_param.nodes[mcts_param.nodes[0].children[policy]].n << " " << mcts_param.used_idx << endl;
     cout << board_param.turn_board[board_param.direction][policy] / hw << " " << board_param.turn_board[board_param.direction][policy] % hw << " " << 50.0 - 50.0 * (double)mcts_param.nodes[mcts_param.nodes[0].children[policy]].w / mcts_param.nodes[mcts_param.nodes[0].children[policy]].n << endl;
     return 1000.0 * board_param.turn_board[board_param.direction][policy] + 50.0 - 50.0 * (double)mcts_param.nodes[mcts_param.nodes[0].children[policy]].w / mcts_param.nodes[mcts_param.nodes[0].children[policy]].n;
 }
 
-inline double complete(int *board){
-    pair<int, int> result = find_win(board);
+extern "C" double complete(){
+    pair<int, int> result = find_win(board_param.board);
     if (result.first == 1)
         cout << "WIN" << endl;
     else if (result.first == 0)
@@ -1099,12 +1101,11 @@ inline double complete(int *board){
     return 1000.0 * board_param.turn_board[board_param.direction][result.second] + 50.0 + 50.0 * result.first;
 }
 
-extern "C" double ai(int *arr_board, int evaluate_count){
+extern "C" int start_ai(int *arr_board, int evaluate_count){
     int i, j, board_tmp, ai_player, policy;
     char elem;
     unsigned long long p, o;
     int n_stones;
-    int board[board_index_num];
     double rnd, sm;
     search_param.evaluate_count = evaluate_count;
     string raw_board;
@@ -1168,14 +1169,15 @@ extern "C" double ai(int *arr_board, int evaluate_count){
             else if (1 & (o >> board_param.board_translate[i][j]))
                 board_tmp += 2 * board_param.pow3[j];
         }
-        board[i] = board_tmp;
+        board_param.board[i] = board_tmp;
     }
     if (n_stones < hw2 - complete_stones){
         cout << "MCTS" << endl;
-        return mcts(board);
+        mcts_init();
+        return 0;
     } else{
         cout << "NEGASCOUT" << endl;
         search_param.max_depth = hw2 + 1 - n_stones;
-        return complete(board);
+        return 1;
     }
 }

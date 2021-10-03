@@ -16,7 +16,10 @@ var player = 0;
 var ai_player = -1;
 var tl = 50;
 var tl_idx = -1;
-let tl_names = ['レベル1', 'レベル2', 'レベル3', 'レベル4', 'レベル5'];
+let tl_names = ['レベル1', 'レベル2', 'レベル3', 'レベル4', 'レベル5', 'レベル6', 'レベル7'];
+var div_mcts = 20;
+var mcts_progress = 0;
+var interval_id = -1;
 let record = [];
 var step = 0;
 var direction = -1;
@@ -107,7 +110,11 @@ function show(r, c) {
                 if (r == -1 || inside(r, c)) {
                     //table.rows[y].cells[x].innerHTML = '<span class="legal_stone"></span>';
                     table.rows[y].cells[x].firstChild.className ="legal_stone";
-                    table.rows[y].cells[x].setAttribute('onclick', "move(this.parentNode.rowIndex, this.cellIndex)");
+                    if (player != ai_player) {
+                        table.rows[y].cells[x].setAttribute('onclick', "move(this.parentNode.rowIndex, this.cellIndex)");
+                    } else {
+                        table.rows[y].cells[x].setAttribute('onclick', "");
+                    }
                 } else {
                     //table.rows[y].cells[x].innerHTML = '<span class="empty_stone"></span>';
                     table.rows[y].cells[x].firstChild.className ="empty_stone";
@@ -145,6 +152,9 @@ function show(r, c) {
         table.rows[0].cells[0].firstChild.className = "state_blank";
         table.rows[0].cells[6].firstChild.className = "state_blank";
         end_game();
+    }
+    if (player == ai_player) {
+        ai();
     }
 }
 
@@ -209,7 +219,28 @@ function check_mobility() {
     return res;
 }
 
+function mcts_main(progress){
+    ++mcts_progress;
+    _mcts_main();
+    progress.value = 100 * mcts_progress / div_mcts;
+    progress.innerText = (100 * mcts_progress / div_mcts) + '%';
+    //console.log("progress:", 100 * mcts_progress / div_mcts, "%");
+    if (mcts_progress == div_mcts){
+        mcts_progress = 0;
+        clearInterval(interval_id);
+        val = _mcts_end();
+        var y = Math.floor(val / 1000.0 / hw);
+        var x = Math.floor((val - y * 1000.0 * hw) / 1000.0);
+        var win_rate = val - y * 1000.0 * hw - x * 1000.0;
+        //console.log(y + " " + x + " " + win_rate);
+        move(y, x);
+        update_graph(win_rate);
+        progress.value = 100;
+    }
+}
+
 function ai() {
+    var tl_div = Math.ceil(tl / div_mcts);
     let res = [
         -1, -1, -1, -1, -1, -1, -1, -1, 
         -1, -1, -1, -1, -1, -1, -1, -1, 
@@ -219,7 +250,7 @@ function ai() {
         -1, -1, -1, -1, -1, -1, -1, -1, 
         -1, -1, -1, -1, -1, -1, -1, -1, 
         -1, -1, -1, -1, -1, -1, -1, -1
-    ]
+    ];
     for (var y = 0; y < hw; ++y) {
         for (var x = 0; x < hw; ++x) {
             if(grid[y][x] == player)
@@ -233,14 +264,23 @@ function ai() {
     var pointer = _malloc(hw2 * 4);
     var offset = pointer / 4;
     HEAP32.set(res, offset);
-    var val = _ai(pointer, tl);
+    var mode = _start_ai(pointer, tl_div);
     _free(pointer);
-    var y = Math.floor(val / 1000.0 / hw);
-    var x = Math.floor((val - y * 1000.0 * hw) / 1000.0);
-    var win_rate = val - y * 1000.0 * hw - x * 1000.0;
-    //console.log(y + " " + x + " " + win_rate);
-    move(y, x);
-    update_graph(win_rate);
+    var val = -1.0;
+    var progress = document.getElementById("progress");
+    progress.value = 0;
+    if (mode == 0) {
+        mcts_progress = 0;
+        interval_id = setInterval(mcts_main, 10, progress);
+    } else {
+        val = _complete();
+        var y = Math.floor(val / 1000.0 / hw);
+        var x = Math.floor((val - y * 1000.0 * hw) / 1000.0);
+        var win_rate = val - y * 1000.0 * hw - x * 1000.0;
+        //console.log(y + " " + x + " " + win_rate);
+        move(y, x);
+        update_graph(win_rate);
+    }
 }
 
 window.onload = function init() {
@@ -353,12 +393,14 @@ function move(y, x) {
     show(y, x);
 }
 
+/*
 function ai_check() {
     if (player == ai_player) {
         ai();
     }
 }
 setInterval(ai_check, 250);
+*/
 
 function update_record() {
     var record_html = document.getElementById('record');
@@ -387,13 +429,6 @@ function end_game() {
     } else {
         data_json["a"] = 'lose';
     }
-    $.ajax({
-        type: "POST",
-        url: "/end",
-        data: data_json,
-        async: false,
-        dataType: "json",
-    });
     html2canvas(document.getElementById('main'),{
         onrendered: function(canvas){
             var imgData = canvas.toDataURL();
