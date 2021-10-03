@@ -1311,7 +1311,7 @@ double evaluate(int idx, bool passed, int n_stones){
         for (const int& cell : search_param.vacant_lst){
             if (mcts_param.nodes[idx].p[cell] != 0.0){
                 if (mcts_param.nodes[idx].children[cell] != -1)
-                    tmp_value = c_puct * mcts_param.nodes[idx].p[cell] * t_sqrt / (1 + mcts_param.nodes[mcts_param.nodes[idx].children[cell]].n) - mcts_param.nodes[mcts_param.nodes[idx].children[cell]].w / mcts_param.nodes[mcts_param.nodes[idx].children[cell]].n - mcts_param.nodes[mcts_param.nodes[idx].children[cell]].pv;
+                    tmp_value = c_puct * mcts_param.nodes[idx].p[cell] * t_sqrt / (1 + mcts_param.nodes[mcts_param.nodes[idx].children[cell]].n) - mcts_param.nodes[mcts_param.nodes[idx].children[cell]].w / mcts_param.nodes[mcts_param.nodes[idx].children[cell]].n - mcts_param.nodes[mcts_param.nodes[idx].children[cell]].pv / mcts_param.nodes[mcts_param.nodes[idx].children[cell]].n;
                 else
                     tmp_value = c_puct * mcts_param.nodes[idx].p[cell] * t_sqrt;
                 if (value < tmp_value){
