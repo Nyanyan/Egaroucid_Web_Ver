@@ -215,3 +215,7 @@ html, body {
     border: 1px solid #aaa;
     padding: 0.5em;
 }
+.chart {
+    width: 70vw;
+    height: 40vmin;
+}

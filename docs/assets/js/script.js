@@ -40,6 +40,8 @@ var graph = new Chart(ctx, {
     ],
     },
     options: {
+        responsive: true,
+        maintainAspectRatio: false,
         title: {
             display: false
         },
@@ -288,6 +290,9 @@ function ai() {
 
 window.onload = function init() {
     document.getElementById('start').disabled = true;
+    var container = document.getElementById('chart_container');
+    ctx.clientWidth = document.getElementById('chart_container').clientWidth;
+    ctx.clientHeight = document.getElementById('chart_container').clientHeight;
     grid[3][3] = 1
     grid[3][4] = 0
     grid[4][3] = 0
