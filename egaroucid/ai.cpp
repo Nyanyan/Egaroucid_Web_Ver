@@ -141,7 +141,6 @@ struct board_param{
 
 struct eval_param{
     double weight[hw2];
-    double avg_canput[hw2];
     int canput[6561];
     int cnt_p[6561], cnt_o[6561];
     double open_eval[40];
@@ -351,7 +350,6 @@ int board_reverse(int idx){
 constexpr int ln_char = 91;
 constexpr double compress_bias = 21.32882;
 const string chars = "!#$&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~";
-double pow_ln_char[3] = {1.0, 0.01098901, 0.00012076};
 unordered_map<char, double> char_keys;
 
 inline double unzip_element(char a, char b, char c){
@@ -974,7 +972,6 @@ double evaluate(int idx, bool passed, int n_stones){
     double value = 0.0;
     int i, j;
     if (n_stones >= hw2 - mcts_complete_stones){
-        //int result = find_win(mcts_param.nodes[idx].board).first;
         double result = c_end * (double)nega_alpha_heavy(mcts_param.nodes[idx].board, search_param.max_depth, -1.1, 1.1, 0);
         mcts_param.nodes[idx].w += result;
         ++mcts_param.nodes[idx].n;
@@ -1031,7 +1028,6 @@ double evaluate(int idx, bool passed, int n_stones){
     }
     if ((!mcts_param.nodes[idx].pass) && (!mcts_param.nodes[idx].end)){
         // children already expanded
-        // select next move
         int a_cell = -1;
         value = -inf;
         double tmp_value;
