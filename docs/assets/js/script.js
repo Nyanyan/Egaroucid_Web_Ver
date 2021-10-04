@@ -98,24 +98,24 @@ function show(r, c) {
         for (var x = 0; x < 8; ++x) {
             table.rows[y].cells[x].style.backgroundColor = "#249972";
             if (grid[y][x] == 0) {
-                //table.rows[y].cells[x].innerHTML = '<span class="black_stone"></span>';
                 table.rows[y].cells[x].firstChild.className ="black_stone";
                 table.rows[y].cells[x].setAttribute('onclick', "");
             } else if (grid[y][x] == 1) {
-                //table.rows[y].cells[x].innerHTML = '<span class="white_stone"></span>';
                 table.rows[y].cells[x].firstChild.className ="white_stone";
                 table.rows[y].cells[x].setAttribute('onclick', "");
             } else if (grid[y][x] == 2) {
                 if (r == -1 || inside(r, c)) {
-                    //table.rows[y].cells[x].innerHTML = '<span class="legal_stone"></span>';
-                    table.rows[y].cells[x].firstChild.className ="legal_stone";
+                    if (player == 0) {
+                        table.rows[y].cells[x].firstChild.className ="legal_stone_black";
+                    } else {
+                        table.rows[y].cells[x].firstChild.className ="legal_stone_white";
+                    }
                     if (player != ai_player) {
                         table.rows[y].cells[x].setAttribute('onclick', "move(this.parentNode.rowIndex, this.cellIndex)");
                     } else {
                         table.rows[y].cells[x].setAttribute('onclick', "");
                     }
                 } else {
-                    //table.rows[y].cells[x].innerHTML = '<span class="empty_stone"></span>';
                     table.rows[y].cells[x].firstChild.className ="empty_stone";
                     table.rows[y].cells[x].setAttribute('onclick', "");
                 }
