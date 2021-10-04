@@ -238,7 +238,11 @@ function mcts_main(progress){
     }
 }
 
-function ai() {
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function ai() {
     var tl_div = Math.ceil(tl / div_mcts);
     let res = [
         -1, -1, -1, -1, -1, -1, -1, -1, 
@@ -271,9 +275,10 @@ function ai() {
     progress.value = 0;
     if (mode == 0) {
         mcts_progress = 0;
-        interval_id = setInterval(mcts_main, 10, progress);
+        interval_id = setInterval(mcts_main, 1, progress);
     } else {
         if (mode == 1) {
+            await sleep(100);
             val = _complete();
         } else {
             val = _first();
