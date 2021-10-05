@@ -1459,30 +1459,30 @@ extern "C" int start_ai(int *arr_board, int evaluate_count){
     int i, j, board_tmp, ai_player, policy;
     char elem;
     unsigned long long p, o;
-    int n_stones;
+    int n_stones = 0;
     double rnd, sm;
     search_param.evaluate_count = evaluate_count;
     string raw_board;
+    n_stones = 0;
+    search_param.vacant_cnt = 0;
     for (i = 0; i < hw2; ++i){
-        if (arr_board[i] == 0)
+        if (arr_board[i] == 0){
             raw_board += "0";
-        else if (arr_board[i] == 1)
+            ++n_stones;
+        } else if (arr_board[i] == 1){
             raw_board += "1";
-        else
+            ++n_stones;
+        } else{
             raw_board += ".";
+            ++search_param.vacant_cnt;
+        }
     }
     cout << raw_board << " " << evaluate_count << endl;
     search_param.turn = 0;
     p = 0;
     o = 0;
-    n_stones = 0;
     search_param.vacant_lst = {};
-    search_param.vacant_cnt = 0;
     if (board_param.direction == -1){
-        for (i = 0; i < hw2; ++i){
-            if (raw_board[i] != '.')
-                ++n_stones;
-        }
         if (n_stones == 4){
             return 2;
         } else{
@@ -1495,7 +1495,6 @@ extern "C" int start_ai(int *arr_board, int evaluate_count){
                 if (raw_board == board_turns[i])
                     board_param.direction = i;
             }
-            n_stones = 0;
         }
     }
     for (i = 0; i < hw2; ++i){
@@ -1504,9 +1503,7 @@ extern "C" int start_ai(int *arr_board, int evaluate_count){
             ++search_param.turn;
             p |= (unsigned long long)(elem == '0') << board_param.turn_board[board_param.direction][i];
             o |= (unsigned long long)(elem == '1') << board_param.turn_board[board_param.direction][i];
-            ++n_stones;
         } else{
-            ++search_param.vacant_cnt;
             search_param.vacant_lst.push_back(board_param.turn_board[board_param.direction][i]);
         }
     }
