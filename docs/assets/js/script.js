@@ -51,8 +51,8 @@ var graph = new Chart(ctx, {
         scales: {
             yAxes: [{
             ticks: {
-                suggestedMax: 100,
-                suggestedMin: 0,
+                max: 100,
+                min: 0,
                 stepSize: 25,
                 callback: function(value, index, values){
                     return  value
@@ -296,8 +296,8 @@ async function ai() {
 window.onload = function init() {
     document.getElementById('start').disabled = true;
     var container = document.getElementById('chart_container');
-    ctx.clientWidth = document.getElementById('chart_container').clientWidth;
-    ctx.clientHeight = document.getElementById('chart_container').clientHeight;
+    ctx.clientWidth = container.clientWidth;
+    ctx.clientHeight = container.clientHeight;
     grid[3][3] = 1
     grid[3][4] = 0
     grid[4][3] = 0
