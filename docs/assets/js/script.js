@@ -85,8 +85,6 @@ function start() {
     }
     if (ai_player == 0){
         direction = 0;
-        move(4, 5);
-        update_graph(50.0);
     }
     show(-1, -1);
 }

@@ -1508,6 +1508,7 @@ compress_idx += compress_digit;
 }
 predict_c::bias2_value = unzip_element(compress_idx);
 compress_idx += compress_digit;
+cout << compress_idx << " " << param_compressed1.length() << endl;
 }
 
 inline predictions predict(const int *board){
@@ -2056,6 +2057,7 @@ int i, cell;
 int board_idx = search_c::get_parent_idx(board, board_c.n_stones, former_idx);
 cout << "board idx " << board_idx << endl;
 if (board_idx == -1){
+cout << "reset index" << endl;
 board_idx = 0;
 search_c::init_parent(board, board_c.n_stones);
 }
@@ -2102,19 +2104,8 @@ cout << "ADDITIONAL SEARCH " << search_c::used_idx << endl;
 return board_idx;
 }
 
-inline int book_mcts_init(const int *board, int former_idx, int player){
-int i, cell;
-int board_idx = search_c::get_parent_idx(board, board_c.n_stones, former_idx);
-cout << "board idx " << board_idx << endl;
-if (board_idx == -1){
-board_idx = 0;
-search_c::init_parent(board, board_c.n_stones);
-}
-return board_idx;
-}
-
 inline double get_value(int board_idx){
-return 50.0 - 50.0 * (double)search_c::nodes[board_idx].w / search_c::nodes[board_idx].n;
+return 50.0 + 50.0 * (double)search_c::nodes[board_idx].w / search_c::nodes[board_idx].n;
 }
 
 inline double complete(const int *board){
@@ -2144,8 +2135,8 @@ search_c search_c;
 class web_c{
 public:
 int board[b_idx_num];
-int f_board[b_idx_num];
 int mcts_idx = 0;
+int policy;
 };
 
 web_c web_c;
@@ -2179,9 +2170,8 @@ return search_c.complete(web_c.board);
 }
 
 extern "C" double book(){
-int policy = book_c.get_val_hash(web_c.f_board);
 cout << "BOOK" << endl;
-return 1000.0 * board_c.rotate(policy) + search_c.get_value(web_c.mcts_idx);
+return 1000.0 * board_c.rotate(web_c.policy) + search_c.get_value(web_c.mcts_idx);
 }
 
 extern "C" int start_ai(int *arr_board, int e_count, int direction){
@@ -2202,14 +2192,18 @@ board_c.direction = direction;
 cout << raw_board << " " << evaluate_count << " " << board_c.direction <<endl;
 vacant_cnt = board_c.input_board(web_c.board, raw_board);
 if (board_c.n_stones < book_stones){
+if (board_c.n_stones == 4)
+policy = 37;
+else
 policy = book_c.get_val_hash(web_c.board);
 if (policy != -1){
 cout << "BOOK" << endl;
-for (i = 0; i < b_idx_num; ++i)
-web_c.f_board[i] = web_c.board[i];
-board_c.move(web_c.f_board, web_c.board, policy);
+web_c.policy = policy;
+int n_board[b_idx_num];
+board_c.move(web_c.board, n_board, policy);
+swap(web_c.board, n_board);
 ++board_c.n_stones;
-web_c.mcts_idx = search_c.book_mcts_init(web_c.f_board, web_c.mcts_idx, 1 - board_c.ai_player);
+web_c.mcts_idx = search_c.mcts_init(web_c.board, web_c.mcts_idx, 1 - board_c.ai_player);
 return -1;
 }
 }
