@@ -30,6 +30,7 @@ using namespace std;
 #define b_idx_num 38
 
 #define n_div 1000000
+#define max_search 400000
 #define tanh_min -5.0
 #define tanh_max 5.0
 #define exp_min -30.0
@@ -1781,7 +1782,7 @@ int n_stones;
 
 class search_c{
 private:
-vector<mcts_node> nodes;
+mcts_node nodes[max_search];
 double exp_arr[n_div];
 
 public:
@@ -1896,8 +1897,6 @@ return a_cell;
 
 inline void create_node(int idx, int a_cell, int n_stones){
 search_c::nodes[idx].children[a_cell] = search_c::used_idx;
-mcts_node node;
-search_c::nodes.push_back(node);
 search_c::nodes[search_c::used_idx].w = 0.0;
 search_c::nodes[search_c::used_idx].n = 0;
 search_c::nodes[search_c::used_idx].pass = true;
@@ -1909,8 +1908,6 @@ board_c.move(search_c::nodes[idx].board, search_c::nodes[search_c::used_idx].boa
 
 inline void create_pass_node(int idx, int n_stones){
 search_c::nodes[idx].children[hw2] = search_c::used_idx;
-mcts_node node;
-search_c::nodes.push_back(node);
 search_c::nodes[search_c::used_idx].w = 0.0;
 search_c::nodes[search_c::used_idx].n = 0;
 search_c::nodes[search_c::used_idx].pass = true;
@@ -1987,9 +1984,6 @@ return -1;
 inline void init_parent(const int *board, int n_stones){
 int i;
 int board_idx = 0;
-search_c::nodes = {};
-mcts_node node;
-search_c::nodes.push_back(node);
 search_c::used_idx = board_idx;
 // set parent node
 for (i = 0; i < b_idx_num; ++i)
