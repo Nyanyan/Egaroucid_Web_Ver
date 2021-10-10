@@ -1062,6 +1062,10 @@ class search_c{
             return board_idx;
         }
 
+        inline double get_value(int board_idx){
+            return 50.0 - 50.0 * (double)search_c::nodes[board_idx].w / search_c::nodes[board_idx].n;
+        }
+
         inline double complete(const int *board){
             int lose_policy = -1, draw_policy = -1;
             int n_board[b_idx_num];
@@ -1089,6 +1093,7 @@ search_c search_c;
 class web_c{
     public:
         int board[b_idx_num];
+        int f_board[b_idx_num];
         int mcts_idx = 0;
 };
 
@@ -1110,6 +1115,10 @@ extern "C" void mcts_main(){
     search_c.mcts_main(web_c.mcts_idx, board_c.ai_player);
 }
 
+extern "C" void book_main(){
+    search_c.mcts_main(web_c.mcts_idx, 1 - board_c.ai_player);
+}
+
 extern "C" double mcts_end(){
     return search_c.mcts_policy(web_c.mcts_idx);
 }
@@ -1119,10 +1128,9 @@ extern "C" double complete(){
 }
 
 extern "C" double book(){
-    int n_board[b_idx_num];
-    int policy = book_c.get_val_hash(web_c.board);
+    int policy = book_c.get_val_hash(web_c.f_board);
     cout << "BOOK" << endl;
-    return 1000.0 * board_c.rotate(policy) + 50.0;
+    return 1000.0 * board_c.rotate(policy) + search_c.get_value(web_c.mcts_idx);
 }
 
 extern "C" int start_ai(int *arr_board, int e_count, int direction){
@@ -1145,7 +1153,10 @@ extern "C" int start_ai(int *arr_board, int e_count, int direction){
     if (board_c.n_stones < book_stones){
         policy = book_c.get_val_hash(web_c.board);
         if (policy != -1){
+            int n_board[b_idx_num];
             cout << "BOOK" << endl;
+            for (i = 0; i < b_idx_num; ++i)
+                web_c.f_board[i] = web_c.board[i];
             board_c.move(web_c.board, n_board, policy);
             swap(web_c.board, n_board);
             ++board_c.n_stones;

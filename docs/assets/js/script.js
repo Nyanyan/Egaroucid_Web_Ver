@@ -242,7 +242,7 @@ function mcts_main(progress){
 
 function book_main(progress){
     ++mcts_progress;
-    _mcts_main();
+    _book_main();
     progress.value = 100 * mcts_progress / div_mcts;
     progress.innerText = (100 * mcts_progress / div_mcts) + '%';
     //console.log("progress:", 100 * mcts_progress / div_mcts, "%");
