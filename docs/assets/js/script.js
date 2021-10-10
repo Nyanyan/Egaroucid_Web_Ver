@@ -65,7 +65,6 @@ var graph = new Chart(ctx, {
 
 function start() {
     document.getElementById('start').disabled = true;
-    console.log(_init_ai());
     ai_player = -1;
     let players = document.getElementsByName('ai_player');
     for (var i = 0; i < 2; ++i) {
@@ -74,6 +73,7 @@ function start() {
             ai_player = players.item(i).value;
         }
     }
+    _init_ai(ai_player, 10, 10);
     let tls = document.getElementsByName('tl');
     var ln = tls.length;
     for (var i = 0; i < ln; ++i) {
@@ -83,6 +83,8 @@ function start() {
             tl_idx = i;
         }
     }
+    if (ai_player == 0)
+        direction = 0;
     show(-1, -1);
 }
 
@@ -238,6 +240,26 @@ function mcts_main(progress){
     }
 }
 
+function book_main(progress){
+    ++mcts_progress;
+    _mcts_main();
+    progress.value = 100 * mcts_progress / div_mcts;
+    progress.innerText = (100 * mcts_progress / div_mcts) + '%';
+    //console.log("progress:", 100 * mcts_progress / div_mcts, "%");
+    if (mcts_progress == div_mcts){
+        mcts_progress = 0;
+        clearInterval(interval_id);
+        progress.value = 100;
+        val = _book();
+        var y = Math.floor(val / 1000.0 / hw);
+        var x = Math.floor((val - y * 1000.0 * hw) / 1000.0);
+        var win_rate = val - y * 1000.0 * hw - x * 1000.0;
+        move(y, x);
+        update_graph(win_rate);
+        console.log('ai', ai_player, 'pl', player);
+    }
+}
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -256,9 +278,9 @@ async function ai() {
     ];
     for (var y = 0; y < hw; ++y) {
         for (var x = 0; x < hw; ++x) {
-            if(grid[y][x] == player)
+            if(grid[y][x] == 0)
                 res[y * hw + x] = 0;
-            else if (grid[y][x] == 1 - player)
+            else if (grid[y][x] == 1)
                 res[y * hw + x] = 1;
             else
                 res[y * hw + x] = -1;
@@ -267,7 +289,7 @@ async function ai() {
     var pointer = _malloc(hw2 * 4);
     var offset = pointer / 4;
     HEAP32.set(res, offset);
-    var mode = _start_ai(pointer, tl_div);
+    var mode = _start_ai(pointer, tl_div, direction);
     _free(pointer);
     console.log('mode', mode);
     var val = -1.0;
@@ -276,20 +298,18 @@ async function ai() {
     if (mode == 0) {
         mcts_progress = 0;
         interval_id = setInterval(mcts_main, 1, progress);
-    } else {
-        if (mode == 1) {
-            await sleep(100);
-            val = _complete();
-        } else {
-            val = _first();
-        }
+    } else if (mode == 1){
+        await sleep(100);
+        val = _complete();
         var y = Math.floor(val / 1000.0 / hw);
         var x = Math.floor((val - y * 1000.0 * hw) / 1000.0);
         var win_rate = val - y * 1000.0 * hw - x * 1000.0;
-        //console.log(y + " " + x + " " + win_rate);
         move(y, x);
         update_graph(win_rate);
         console.log('ai', ai_player, 'pl', player);
+    } else {
+        mcts_progress = 0;
+        interval_id = setInterval(book_main, 1, progress);
     }
 }
 
@@ -405,15 +425,6 @@ function move(y, x) {
     player = 1 - player;
     show(y, x);
 }
-
-/*
-function ai_check() {
-    if (player == ai_player) {
-        ai();
-    }
-}
-setInterval(ai_check, 250);
-*/
 
 function update_record() {
     var record_html = document.getElementById('record');

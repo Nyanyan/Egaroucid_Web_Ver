@@ -5,6 +5,10 @@ with open('ai.cpp', 'r') as f:
 with open('param_compress.txt', 'r') as f:
     param = f.read()
 ai = ai.replace('REPLACE_PARAM_HERE', param)
+with open('book_compress.txt', 'r') as f:
+    book = f.read()
+ai = ai.replace('REPLACE_BOOK_HERE', book)
+ai = ai.replace('    ', '')
 with open('ai_compress.cpp', 'w') as f:
     f.write(ai)
 print('----------------file created----------------')
