@@ -73,7 +73,7 @@ function start() {
             ai_player = players.item(i).value;
         }
     }
-    _init_ai(ai_player, 10, 10);
+    _init_ai(ai_player, 16, 10);
     let tls = document.getElementsByName('tl');
     var ln = tls.length;
     for (var i = 0; i < ln; ++i) {

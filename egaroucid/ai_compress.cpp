@@ -2204,14 +2204,12 @@ vacant_cnt = board_c.input_board(web_c.board, raw_board);
 if (board_c.n_stones < book_stones){
 policy = book_c.get_val_hash(web_c.board);
 if (policy != -1){
-int n_board[b_idx_num];
 cout << "BOOK" << endl;
 for (i = 0; i < b_idx_num; ++i)
 web_c.f_board[i] = web_c.board[i];
-board_c.move(web_c.board, n_board, policy);
-swap(web_c.board, n_board);
+board_c.move(web_c.f_board, web_c.board, policy);
 ++board_c.n_stones;
-web_c.mcts_idx = search_c.book_mcts_init(web_c.board, web_c.mcts_idx, 1 - board_c.ai_player);
+web_c.mcts_idx = search_c.book_mcts_init(web_c.f_board, web_c.mcts_idx, 1 - board_c.ai_player);
 return -1;
 }
 }
