@@ -48,7 +48,7 @@ using namespace std;
 #define conv_padding2 (conv_padding * 2)
 
 int evaluate_count;
-#define mcts_comp_stones 10
+#define mcts_comp_stones 8
 int comp_stones;
 #define c_puct 0.7
 #define p_offset 0.05
@@ -1046,6 +1046,16 @@ class search_c{
             return board_idx;
         }
 
+        inline void calc_value(int board_idx, int *res){
+            int i;
+            for (i = 0; i < hw2; ++i)
+                res[i] = -1;
+            for (const int& cell : board_c.vacant_lst){
+                if (search_c::nodes[board_idx].children[cell] != -1)
+                    res[cell] = (int)(50.0 - 50.0 * search_c::nodes[search_c::nodes[board_idx].children[cell]].w / search_c::nodes[search_c::nodes[board_idx].children[cell]].n);
+            }
+        }
+
         inline double get_value(int board_idx){
             return 50.0 + 50.0 * (double)search_c::nodes[board_idx].w / search_c::nodes[board_idx].n;
         }
@@ -1070,6 +1080,26 @@ class search_c{
             }
             return 1000.0 * board_c.rotate(lose_policy) + 0.0;
         }
+
+        inline void complete_value(const int *board, int *res){
+            int n_board[b_idx_num];
+            double g;
+            int i;
+            for (i = 0; i < hw2; ++i)
+                res[i] = -1;
+            for (const int& cell : board_c.vacant_lst){
+                if (board_c.check_legal(board, cell)){
+                    board_c.move(board, n_board, cell);
+                    g = -search_c::nega_alpha(n_board, -1.0, 1.0, 0);
+                    if (g == 1.0)
+                        res[cell] = 100;
+                    else if (g == 0.0)
+                        res[cell] = 50;
+                    else
+                        res[cell] = 0;
+                }
+            }
+        }
 };
 
 search_c search_c;
@@ -1083,7 +1113,7 @@ class web_c{
 
 web_c web_c;
 
-extern "C" void init_ai(int ai_player, int b_stones, int c_stones){
+extern "C" int init_ai(int ai_player, int b_stones, int c_stones){
     board_c.init();
     predict_c.init();
     book_c.init();
@@ -1093,6 +1123,7 @@ extern "C" void init_ai(int ai_player, int b_stones, int c_stones){
     comp_stones = c_stones;
     cout << "initialized " << board_c.ai_player << " " << book_stones << " " << comp_stones << endl;
     search_c.first_search(100);
+    return 0;
 }
 
 extern "C" void mcts_main(){
@@ -1156,5 +1187,40 @@ extern "C" int start_ai(int *arr_board, int e_count, int direction){
     } else{
         cout << "NEGAALPHA" << endl;
         return 1;
+    }
+}
+
+extern "C" void calc_value(int *arr_board, int e_count, int direction, int *res){
+    int i, j, policy;
+    int vacant_cnt, board_idx;
+    string raw_board;
+    for (i = 0; i < hw2; ++i){
+        if (arr_board[i] == 0){
+            raw_board += "1";
+        } else if (arr_board[i] == 1){
+            raw_board += "0";
+        } else{
+            raw_board += ".";
+        }
+    }
+    board_c.direction = direction;
+    evaluate_count = e_count;
+    cout << raw_board << " " << evaluate_count << " " << board_c.direction <<endl;
+    vacant_cnt = board_c.input_board(web_c.board, raw_board);
+    int tmp_res[hw2];
+    if (vacant_cnt > comp_stones){
+        cout << "MCTS" << endl;
+        web_c.mcts_idx = search_c.mcts_init(web_c.board, web_c.mcts_idx, 1 - board_c.ai_player);
+        search_c.mcts_main(web_c.mcts_idx, 1 - board_c.ai_player);
+        search_c.calc_value(web_c.mcts_idx, tmp_res);
+    } else{
+        search_c.complete_value(web_c.board, tmp_res);
+    }
+    for (i = 0; i < hw2; ++i)
+        res[10 + board_c.rotate(i)] = tmp_res[i];
+    for (i = 0; i < hw; ++i){
+        for (j = 0; j < hw; ++j)
+            cout << res[10 + i * hw + j] << " ";
+        cout << endl;
     }
 }

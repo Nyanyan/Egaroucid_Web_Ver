@@ -29,13 +29,12 @@
         </p>
         <p align="center">
             <span class="setting"><a href="#strength">AIの強さ</a></span>
-            <input type="radio" class="radio_size" name="tl" value="100" id="100"><label for="100" class="setting">レベル1</label>
-            <input type="radio" class="radio_size" name="tl" value="200" id="200"><label for="200" class="setting">レベル2</label>
-            <input type="radio" class="radio_size" name="tl" value="400" id="400" checked><label for="400" class="setting">レベル3</label>
-            <input type="radio" class="radio_size" name="tl" value="800" id="800"><label for="800" class="setting">レベル4</label>
-            <input type="radio" class="radio_size" name="tl" value="1600" id="1600"><label for="1600" class="setting">レベル5</label>
-            <input type="radio" class="radio_size" name="tl" value="3200" id="3200"><label for="3200" class="setting">レベル6</label>
-            <input type="radio" class="radio_size" name="tl" value="6400" id="6400"><label for="6400" class="setting">レベル7</label>
+            <input type="range" id="ai_level" min="1" max="7" step="1" value="3">
+            <span class="setting">レベル</span>
+            <span class="setting" id="ai_level_label"></span>
+        </p>
+        <p align="center">
+            <input type="checkbox" id="show_value" checked><label class="setting" for="show_value">マスに評価値を表示</label>
         </p>
         <div align="center">
             <input type="submit" class="setting" value="対局開始" onclick="start()" id="start">

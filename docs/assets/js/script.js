@@ -17,6 +17,7 @@ var ai_player = -1;
 var tl = 50;
 var tl_idx = -1;
 let tl_names = ['レベル1', 'レベル2', 'レベル3', 'レベル4', 'レベル5', 'レベル6', 'レベル7'];
+let tls = [100, 200, 400, 800, 1600, 3200, 6400]
 var div_mcts = 20;
 var mcts_progress = 0;
 var interval_id = -1;
@@ -24,6 +25,7 @@ let record = [];
 var step = 0;
 var direction = -1;
 var isstart = true;
+var show_value = true;
 var ctx = document.getElementById("graph");
 var graph = new Chart(ctx, {
     type: 'line',
@@ -63,8 +65,22 @@ var graph = new Chart(ctx, {
     }
 });
 
+const level_range = document.getElementById('ai_level');
+const level_show = document.getElementById('ai_level_label');
+const setCurrentValue = (val) => {
+  level_show.innerText = val;
+}
+const rangeOnChange = (e) =>{
+  setCurrentValue(e.target.value);
+}
+
+
 function start() {
     document.getElementById('start').disabled = true;
+    level_range.disabled = true;
+    var show_value_elem = document.getElementById('show_value');
+    show_value_elem.disabled = true;
+    show_value = show_value_elem.checked;
     ai_player = -1;
     let players = document.getElementsByName('ai_player');
     for (var i = 0; i < 2; ++i) {
@@ -73,20 +89,23 @@ function start() {
             ai_player = players.item(i).value;
         }
     }
-    _init_ai(ai_player, 16, 10);
-    let tls = document.getElementsByName('tl');
-    var ln = tls.length;
-    for (var i = 0; i < ln; ++i) {
-        tls.item(i).disabled = true;
-        if (tls.item(i).checked) {
-            tl = tls.item(i).value;
-            tl_idx = i;
-        }
-    }
+    console.log(_init_ai(ai_player, 16, 8));
+    tl = tls[level_range.value - 1];
+    console.log("tl", tl);
     if (ai_player == 0){
         direction = 0;
     }
     show(-1, -1);
+    if (show_value && ai_player != player) {
+        var table = document.getElementById("board");
+        for (var y = 0; y < 8; ++y) {
+            for (var x = 0; x < 8; ++x) {
+                if (grid[y][x] == 2) {
+                    table.rows[y].cells[x].firstChild.innerText = "50";
+                }
+            }
+        }
+    }
 }
 
 function show(r, c) {
@@ -113,6 +132,7 @@ function show(r, c) {
                     } else {
                         table.rows[y].cells[x].firstChild.className ="legal_stone_white";
                     }
+                    table.rows[y].cells[x].firstChild.innerText = "";
                     if (player != ai_player) {
                         table.rows[y].cells[x].setAttribute('onclick', "move(this.parentNode.rowIndex, this.cellIndex)");
                     } else {
@@ -155,8 +175,12 @@ function show(r, c) {
         table.rows[0].cells[6].firstChild.className = "state_blank";
         end_game();
     }
-    if (player == ai_player) {
-        ai();
+    if (r >= 0){
+        if (player == ai_player) {
+            ai();
+        } else if (show_value) {
+            calc_value();
+        }
     }
 }
 
@@ -314,66 +338,44 @@ async function ai() {
     }
 }
 
-window.onload = function init() {
-    document.getElementById('start').disabled = true;
-    var container = document.getElementById('chart_container');
-    ctx.clientWidth = container.clientWidth;
-    ctx.clientHeight = container.clientHeight;
-    grid[3][3] = 1
-    grid[3][4] = 0
-    grid[4][3] = 0
-    grid[4][4] = 1
-    player = 0;
-    var coord_top = document.getElementById('coord_top');
-    var row = document.createElement('tr');
-    for (var x = 0; x < hw; ++x) {
-        var cell = document.createElement('td');
-        cell.className = "coord_cell";
-        var coord = document.createElement('span');
-        coord.className = "coord";
-        coord.innerHTML = String.fromCharCode(65 + x);
-        cell.appendChild(coord);
-        row.appendChild(cell);
-    }
-    coord_top.appendChild(row);
-    var coord_left = document.getElementById('coord_left');
+function calc_value() {
+    let res = new Int32Array([
+        -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1, 
+        -1, -1, -1, -1, -1, -1, -1, -1
+    ]);
     for (var y = 0; y < hw; ++y) {
-        var row = document.createElement('tr');
-        var cell = document.createElement('td');
-        cell.className = "coord_cell";
-        var coord = document.createElement('span');
-        coord.className = "coord";
-        coord.innerHTML = y + 1;
-        cell.appendChild(coord);
-        row.appendChild(cell);
-        coord_left.appendChild(row);
-    }
-    var coord_right = document.getElementById('coord_right');
-    for (var y = 0; y < hw; ++y) {
-        var row = document.createElement('tr');
-        var cell = document.createElement('td');
-        cell.className = "coord_cell";
-        var coord = document.createElement('span');
-        coord.className = "coord";
-        cell.appendChild(coord);
-        row.appendChild(cell);
-        coord_right.appendChild(row);
-    }
-    var table = document.getElementById('board');
-    for (var y = 0; y < hw; ++y) {
-        var row = document.createElement('tr');
         for (var x = 0; x < hw; ++x) {
-            var cell = document.createElement('td');
-            cell.className = "cell";
-            var stone = document.createElement('span');
-            stone.className = "empty_stone";
-            cell.appendChild(stone);
-            row.appendChild(cell);
+            if(grid[y][x] == 0)
+                res[y * hw + x] = 0;
+            else if (grid[y][x] == 1)
+                res[y * hw + x] = 1;
+            else
+                res[y * hw + x] = -1;
         }
-        table.appendChild(row);
     }
-    show(-2, -2);
-    document.getElementById('start').disabled = false;
+    var n_byte = res.BYTES_PER_ELEMENT;
+    var pointer_value = _malloc((hw2 + 10) * n_byte);
+    var pointer = _malloc(hw2 * n_byte);
+    HEAP32.set(res, pointer / n_byte);
+    _calc_value(pointer, 500, direction, pointer_value);
+    _free(pointer);
+    var output_array = new Int32Array(HEAP32.buffer, pointer_value, hw2 + 10);
+    _free(pointer_value);
+    console.log(output_array);
+    var table = document.getElementById("board");
+    for (var y = 0; y < hw; ++y) {
+        for (var x = 0; x < hw; ++x) {
+            if (grid[y][x] == 2) {
+                table.rows[y].cells[x].firstChild.innerText = output_array[10 + y * hw + x];
+            }
+        }
+    }
 }
 
 function move(y, x) {
@@ -492,4 +494,67 @@ function end_game() {
             new_game.classList.remove('show');
         })
     }
+}
+
+window.onload = function init() {
+    level_range.addEventListener('input', rangeOnChange);
+    setCurrentValue(level_range.value);
+    var container = document.getElementById('chart_container');
+    ctx.clientWidth = container.clientWidth;
+    ctx.clientHeight = container.clientHeight;
+    grid[3][3] = 1
+    grid[3][4] = 0
+    grid[4][3] = 0
+    grid[4][4] = 1
+    player = 0;
+    var coord_top = document.getElementById('coord_top');
+    var row = document.createElement('tr');
+    for (var x = 0; x < hw; ++x) {
+        var cell = document.createElement('td');
+        cell.className = "coord_cell";
+        var coord = document.createElement('span');
+        coord.className = "coord";
+        coord.innerHTML = String.fromCharCode(65 + x);
+        cell.appendChild(coord);
+        row.appendChild(cell);
+    }
+    coord_top.appendChild(row);
+    var coord_left = document.getElementById('coord_left');
+    for (var y = 0; y < hw; ++y) {
+        var row = document.createElement('tr');
+        var cell = document.createElement('td');
+        cell.className = "coord_cell";
+        var coord = document.createElement('span');
+        coord.className = "coord";
+        coord.innerHTML = y + 1;
+        cell.appendChild(coord);
+        row.appendChild(cell);
+        coord_left.appendChild(row);
+    }
+    var coord_right = document.getElementById('coord_right');
+    for (var y = 0; y < hw; ++y) {
+        var row = document.createElement('tr');
+        var cell = document.createElement('td');
+        cell.className = "coord_cell";
+        var coord = document.createElement('span');
+        coord.className = "coord";
+        cell.appendChild(coord);
+        row.appendChild(cell);
+        coord_right.appendChild(row);
+    }
+    var table = document.getElementById('board');
+    for (var y = 0; y < hw; ++y) {
+        var row = document.createElement('tr');
+        for (var x = 0; x < hw; ++x) {
+            var cell = document.createElement('td');
+            cell.className = "cell";
+            var stone = document.createElement('span');
+            stone.className = "empty_stone";
+            cell.appendChild(stone);
+            row.appendChild(cell);
+        }
+        table.appendChild(row);
+    }
+    show(-2, -2);
+    document.getElementById('start').disabled = false;
 }
