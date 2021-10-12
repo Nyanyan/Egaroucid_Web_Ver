@@ -26,6 +26,8 @@ var step = 0;
 var direction = -1;
 var isstart = true;
 var show_value = true;
+var show_graph = true;
+let graph_values = [];
 var ctx = document.getElementById("graph");
 var graph = new Chart(ctx, {
     type: 'line',
@@ -81,6 +83,9 @@ function start() {
     var show_value_elem = document.getElementById('show_value');
     show_value_elem.disabled = true;
     show_value = show_value_elem.checked;
+    var show_graph_elem = document.getElementById('show_graph');
+    show_graph_elem.disabled = true;
+    show_graph = show_graph_elem.checked;
     ai_player = -1;
     let players = document.getElementsByName('ai_player');
     for (var i = 0; i < 2; ++i) {
@@ -436,12 +441,23 @@ function update_record() {
 }
 
 function update_graph(s) {
-    graph.data.labels.push(record.length);
-    graph.data.datasets[0].data.push(s);
-    graph.update();
+    if (show_graph){
+        graph.data.labels.push(record.length);
+        graph.data.datasets[0].data.push(s);
+        graph.update();
+    } else {
+        let tmp = [record.length, s];
+        graph_values.push(tmp);
+    }
 }
 
 function end_game() {
+    alert(graph_values);
+    for (var i = 0; i < graph_values.length; ++i){
+        graph.data.labels.push(graph_values[i][0]);
+        graph.data.datasets[0].data.push(graph_values[i][1]);
+    }
+    graph.update();
     let stones = [0, 0];
     for (var y = 0; y < hw; ++y) {
         for (var x = 0; x < hw; ++x) {
