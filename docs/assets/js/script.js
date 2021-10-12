@@ -452,7 +452,6 @@ function update_graph(s) {
 }
 
 function end_game() {
-    alert(graph_values);
     for (var i = 0; i < graph_values.length; ++i){
         graph.data.labels.push(graph_values[i][0]);
         graph.data.datasets[0].data.push(graph_values[i][1]);
