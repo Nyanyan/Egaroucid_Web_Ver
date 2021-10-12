@@ -48,7 +48,7 @@ using namespace std;
 #define conv_padding2 (conv_padding * 2)
 
 int evaluate_count;
-#define mcts_comp_stones 8
+#define mcts_comp_stones 10
 int comp_stones;
 #define c_puct 0.7
 #define p_offset 0.05
@@ -1218,9 +1218,4 @@ extern "C" void calc_value(int *arr_board, int e_count, int direction, int *res)
     }
     for (i = 0; i < hw2; ++i)
         res[10 + board_c.rotate(i)] = tmp_res[i];
-    for (i = 0; i < hw; ++i){
-        for (j = 0; j < hw; ++j)
-            cout << res[10 + i * hw + j] << " ";
-        cout << endl;
-    }
 }
