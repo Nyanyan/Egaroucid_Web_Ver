@@ -17,8 +17,8 @@
         <title>Egaroucid</title>
     </head>
     <body>
-        <div class="title">Egaroucid 2 - Othello AI</div>
-        <div class="sub_title"><a href="https://www.codingame.com/multiplayer/bot-programming/othello-1/leaderboard" target="_blank">Codingame Othello</a>で世界10位を経験したAIの進化版です。<a href="#achievement">詳細</a></div>
+        <div class="title">Egaroucid2 - Othello AI</div>
+        <div class="sub_title"><a href="https://www.codingame.com/multiplayer/bot-programming/othello-1/leaderboard" target="_blank">Codingame Othello</a>で世界17位になったAIです。</div>
         <div align="center">
             <a class="setting" href="#usage">使い方</a>
             <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-text="世界10位のオセロAI&quot;Egaroucid&quot;と勝負！" data-url="https://www.egaroucid.nyanyan.dev/" data-hashtags="egaroucid" data-related="takuto_yamana,Nyanyan_Cube" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
@@ -28,14 +28,14 @@
             <input type="radio" class="radio_size" name="ai_player" value="0" id="black"><label for="black" class="setting">黒(先手): AI 白(後手): あなた</label>
         </p>
         <p align="center">
-            <span class="setting"><a href="#strength">AIの強さ</a></span>
+            <span class="setting">AIの強さ</span>
             <input type="range" id="ai_level" min="1" max="7" step="1" value="3">
             <span class="setting">レベル</span>
             <span class="setting" id="ai_level_label"></span>
         </p>
         <p align="center">
-            <input type="checkbox" id="show_value" checked><label class="setting" for="show_value">マスに予想勝率を表示</label>
-            <input type="checkbox" id="show_graph" checked><label class="setting" for="show_graph">予想勝率グラフを表示</label>
+            <input type="checkbox" id="show_value" checked><label class="setting" for="show_value">ヒント表示</label>
+            <input type="checkbox" id="show_graph" checked><label class="setting" for="show_graph">対局中グラフ表示</label>
         </p>
         <div align="center">
             <input type="submit" class="setting" value="対局開始" onclick="start()" id="start">
@@ -43,11 +43,11 @@
         <div class="popup" id="js-popup">
             <div class="popup-inner">
                 <p align="center" class="sub_title" id="result_text"></p>
-                <a href="#"><img class="image" id="game_result"></a>
+                <img class="image" id="game_result">
                 <p align="center" class="hidden" id="tweet_result"></p>
                 <p align="center" class="text">上の画像は右クリックなどで保存できます。</p>
                 <div class="hidden" id="new_game"><p align="center" class="text"><a href="https://www.egaroucid.nyanyan.dev">新しい対局を開始(リロードします)</a></p></div>
-                <p align="center" class="text">ポップアップの周りをタップするとポップアップが消えます。</p>
+                <p align="center" class="text">周りをタップするとポップアップが消えます。</p>
             </div>
             <div class="black-background" id="js-black-bg"></div>
         </div>
@@ -96,7 +96,9 @@
                 手番とAIの強さを選択し、対局開始ボタンを押してください。<br>
                 AIの強さについての詳細は<a href="#strength">こちら</a><br>
                 予想勝率グラフは左が序盤、右が現在の手です。<br>
-                値が大きくなるほどAI有利と判断していて、50%が互角です。<br>
+                値が大きくなるほどAI有利と判断していて、50が互角です。<br>
+                ヒントは予想勝率(%)を表しています。適当実装なので目安です。<br>
+                グラフ表示をオフにしても対局終了後にグラフが描画されます。<br>
             </div>
             <details class="details" id="strength">
                 <summary class="summary">AIの強さ</summary>
@@ -170,27 +172,17 @@
                 </details>
             </div>
             <details class="details" id="achievement">
-                <summary class="summary">世界10位について</summary>
+                <summary class="summary">世界10位、世界17位について</summary>
                 <div  class="text">
-                    このAIは2021年6月28日に<a href="https://www.codingame.com/multiplayer/bot-programming/othello-1/leaderboard" target="_blank">Codingame Othello</a>で世界10位を獲得しました。<br>
-                    しかし、このコンテストは規模が小さめですので、Edaxなどの世界的な強豪と比較するととても弱いと思います。<br>
-                    また、このサイトではサーバの負荷を考えて長時間の計算はできません。<br>
-                    以上の理由で、世界10位ではあるもののオセロ高段者の方々であれば最強レベルでも勝てると思います。どうか叩かないでください。。<br>
-                    今後も強くしていきますのでよろしくお願いいたします。
-                </div>
-            </details>
-            <details class="details" id="level_minus1">
-                <summary class="summary">レベル-1について</summary>
-                <div  class="text">
-                    単純に勝つための評価値を逆にしたら負けようとするかと言われると、そうではないことを作者は承知しています。<br>
-                    この機能はレベル1でもそこそこ強くて勝てない人を見て、そういう方でも楽しんでいただけたらと思って作りました。<br>
-                    ちなみにレベル-2はレベル-1よりも負けやすくなるよう評価関数をいじってみました。ぜひ挑戦してみてください。
+                    このAIの旧バージョン(初代Egaroucid)は2021年6月28日に<a href="https://www.codingame.com/multiplayer/bot-programming/othello-1/leaderboard" target="_blank">Codingame Othello</a>で世界10位を獲得しました。
+                    その後初代Egaroucidの順位は世界20位まで落ちてしまい、新たにEgaroucid2を制作しました。こちらは2021年10月13日に世界17位になりました。<br>
+                    しかし、このコンテストは規模が小さめですので、Edaxなどの世界的な強豪と比較するととても弱いと思います。今後も強くしていきますのでよろしくお願いいたします。
                 </div>
             </details>
             <div align="center" class="rect">
                 <div class="sub_title">技術解説</div>
                 <details class="details">
-                    <summary class="summary_small">Egaroucid1</summary>
+                    <summary class="summary_small">初代Egaroucid</summary>
                     <div class="text">
                         このAIはminimax系ゲーム木探索アルゴリズムであるNegascout法を主体に、葉ノード付近ではNegaalpha法に切り替えて高速化しています。move orderingを行う場合は開放度のようなものを用いています。<br>
                         オセロの状態管理には完全インデックス化を用いています。完全インデックス化は配列やビットボードよりも高速に処理できます。<br>
@@ -202,8 +194,8 @@
                     <summary class="summary_small">Egaroucid2</summary>
                     <div class="text">
                         Egaroucid2の序中盤は囲碁や将棋などでとても強いAIであるAlphaZeroのアルゴリズムを簡略化したものを使っています。<br>
-                        モンテカルロ木探索(MCTS)に似たアルゴリズムですが、1回の訪問でノードを展開する他、展開時にニューラルネットワークで盤面の価値(予想勝率)と方策を推論し、MCTSの成功率項に影響させます。<br>
-                        終盤はEgaroucid1で使ったアルゴリズムの一部であるNegaalpha法を使って必勝読み(勝てる手筋が見つかり次第探索を打ち切る)をしています。<br>
+                        モンテカルロ木探索(MCTS)に似たPV-MCTSというアルゴリズムで、1回の訪問でノードを展開する他、展開時にニューラルネットワークで盤面の価値(予想勝率)と方策を推論し、打つ手の決定に影響させます。<br>
+                        終盤は初代Egaroucidで使ったアルゴリズムの一部であるNegaalpha法を使って必勝読み(勝てる手筋が見つかり次第探索を打ち切る)をしています。<br>
                         詳細は<a href="https://scrapbox.io/nyanyan/%E3%82%AA%E3%82%BB%E3%83%ADAI%22Egaroucid%22%E5%85%A8%E8%88%AC" target="_blank">Scrapbox</a>に書きました。
                     </div>
                 </details>
@@ -360,10 +352,13 @@
                             <ul>
                                 <li>AIを大幅にアップデートした</li>
                                 <li>AIをwasmで動くようにしたので静的なサイトに移行</li>
+                                <li>AIの計算進捗バーを設置</li>
+                                <li>ヒント表示機能を実装</li>
+                                <li>対局中のグラフ非表示機能を実装</li>
                             </ul>
                             [表示変更]<br>
                             <ul>
-                                <li>AIの計算進捗バーを設置</li>
+                                <li>レベル選択のUIを変更</li>
                                 <li>AIの仕様変更に伴い文章を変更</li>
                             </ul>
                         </td>
