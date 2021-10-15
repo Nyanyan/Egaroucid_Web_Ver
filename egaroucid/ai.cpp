@@ -1113,11 +1113,14 @@ class web_c{
 
 web_c web_c;
 
-extern "C" int init_ai(int ai_player, int b_stones, int c_stones){
+extern "C" int main(){
     board_c.init();
     predict_c.init();
     book_c.init();
     search_c.init();
+}
+
+extern "C" int init_ai(int ai_player, int b_stones, int c_stones){
     board_c.ai_player = ai_player;
     book_stones = b_stones + 4;
     comp_stones = c_stones;

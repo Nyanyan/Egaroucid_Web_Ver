@@ -97,6 +97,7 @@ function start() {
     tl = tls[level_range.value - 1];
     tl_idx = level_range.value - 1;
     console.log("tl", tl);
+    console.log("initializing AI", _init_ai(ai_player, 16, 16));
     if (ai_player == 0){
         direction = 0;
         move(4, 5);
@@ -573,6 +574,5 @@ window.onload = function init() {
         table.appendChild(row);
     }
     show(-2, -2);
-    console.log("initializing AI", _init_ai(ai_player, 16, 16));
     document.getElementById('start').disabled = false;
 }
