@@ -99,14 +99,16 @@ function start() {
     console.log("tl", tl);
     if (ai_player == 0){
         direction = 0;
-    }
-    show(-1, -1);
-    if (show_value && ai_player != player) {
-        var table = document.getElementById("board");
-        for (var y = 0; y < 8; ++y) {
-            for (var x = 0; x < 8; ++x) {
-                if (grid[y][x] == 2) {
-                    table.rows[y].cells[x].firstChild.innerText = "50";
+        move(4, 5);
+    } else {
+        show(-1, -1);
+        if (show_value && ai_player != player) {
+            var table = document.getElementById("board");
+            for (var y = 0; y < 8; ++y) {
+                for (var x = 0; x < 8; ++x) {
+                    if (grid[y][x] == 2) {
+                        table.rows[y].cells[x].firstChild.innerText = "50";
+                    }
                 }
             }
         }
