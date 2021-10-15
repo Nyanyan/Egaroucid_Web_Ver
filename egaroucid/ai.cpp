@@ -48,7 +48,7 @@ using namespace std;
 #define conv_padding2 (conv_padding * 2)
 
 int evaluate_count;
-#define mcts_comp_stones 10
+#define mcts_comp_stones 8
 int comp_stones;
 #define c_puct 0.7
 #define p_offset 0.05
