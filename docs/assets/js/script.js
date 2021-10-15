@@ -94,7 +94,6 @@ function start() {
             ai_player = players.item(i).value;
         }
     }
-    console.log(_init_ai(ai_player, 16, 16));
     tl = tls[level_range.value - 1];
     tl_idx = level_range.value - 1;
     console.log("tl", tl);
@@ -371,7 +370,7 @@ function calc_value() {
     var pointer_value = _malloc((hw2 + 10) * n_byte);
     var pointer = _malloc(hw2 * n_byte);
     HEAP32.set(res, pointer / n_byte);
-    _calc_value(pointer, 50, direction, pointer_value);
+    _calc_value(pointer, 100, direction, pointer_value);
     _free(pointer);
     var output_array = new Int32Array(HEAP32.buffer, pointer_value, hw2 + 10);
     _free(pointer_value);
@@ -574,5 +573,6 @@ window.onload = function init() {
         table.appendChild(row);
     }
     show(-2, -2);
+    console.log("initializing AI", _init_ai(ai_player, 16, 16));
     document.getElementById('start').disabled = false;
 }
