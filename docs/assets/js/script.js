@@ -96,6 +96,7 @@ function start() {
     }
     console.log(_init_ai(ai_player, 16, 16));
     tl = tls[level_range.value - 1];
+    tl_idx = level_range.value - 1;
     console.log("tl", tl);
     if (ai_player == 0){
         direction = 0;
