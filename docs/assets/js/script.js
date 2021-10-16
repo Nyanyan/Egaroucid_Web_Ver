@@ -12,6 +12,7 @@ let grid = [
     [-1, -1, -1, -1, -1, -1, -1, -1],
     [-1, -1, -1, -1, -1, -1, -1, -1]
 ];
+var n_stones = 4;
 var player = 0;
 var ai_player = -1;
 var tl = 50;
@@ -98,6 +99,7 @@ function start() {
     tl_idx = level_range.value - 1;
     console.log("tl", tl);
     console.log("initializing AI", _init_ai(ai_player, 16, 16));
+    n_stones = 4;
     if (ai_player == 0){
         direction = 0;
         move(4, 5);
@@ -299,6 +301,8 @@ function sleep(ms) {
 
 async function ai() {
     var tl_div = Math.ceil(tl / div_mcts);
+    if (n_stones > 40)
+        tl_div = Math.ceil(tl_div / 5);
     let res = [
         -1, -1, -1, -1, -1, -1, -1, -1, 
         -1, -1, -1, -1, -1, -1, -1, -1, 
@@ -433,6 +437,7 @@ function move(y, x) {
     ++record.length;
     record[record.length - 1] = [y, x];
     update_record();
+    ++n_stones;
     player = 1 - player;
     show(y, x);
 }
