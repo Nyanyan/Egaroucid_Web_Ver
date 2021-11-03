@@ -15,10 +15,14 @@ let grid = [
 var n_stones = 4;
 var player = 0;
 var ai_player = -1;
-var tl = 50;
-var tl_idx = -1;
-let tl_names = ['レベル1', 'レベル2', 'レベル3', 'レベル4', 'レベル5', 'レベル6', 'レベル7', 'レベル8'];
-let tls = [50, 100, 200, 400, 800, 1600, 3200, 6400]
+var depth = 0;
+var win_read_depth = 16;
+var book_depth = 47;
+var level_idx = -1;
+let level_names = ['レベル1', 'レベル2', 'レベル3', 'レベル4', 'レベル5', 'レベル6', 'レベル7', 'レベル8', 'レベル9', 'レベル10', 'レベル11', 'レベル12', 'カスタム'];
+let level_depth = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, -1];
+var game_end = false;
+var value_calced = false;
 var div_mcts = 20;
 var mcts_progress = 0;
 var interval_id = -1;
@@ -56,9 +60,9 @@ var graph = new Chart(ctx, {
         scales: {
             yAxes: [{
             ticks: {
-                max: 100,
-                min: 0,
-                stepSize: 25,
+                max: 110,
+                min: -10,
+                stepSize: 10,
                 callback: function(value, index, values){
                     return  value
                 }
@@ -71,14 +75,28 @@ var graph = new Chart(ctx, {
 const level_range = document.getElementById('ai_level');
 const level_show = document.getElementById('ai_level_label');
 const setCurrentValue = (val) => {
-  level_show.innerText = val;
+    level_show.innerText = level_names[val];
+    
 }
 const rangeOnChange = (e) =>{
-  setCurrentValue(e.target.value);
+    setCurrentValue(e.target.value);
 }
 
 
 function start() {
+    for (var y = 0; y < hw; ++y){
+        for (var x = 0; x < hw; ++x)
+            grid[y][x] = -1;
+    }
+    grid[3][3] = 1
+    grid[3][4] = 0
+    grid[4][3] = 0
+    grid[4][4] = 1
+    player = 0;
+    graph.data.values = [];
+    graph.data.labels = [];
+    graph.update();
+    game_end = false;
     document.getElementById('start').disabled = true;
     level_range.disabled = true;
     var show_value_elem = document.getElementById('show_value');
@@ -95,27 +113,18 @@ function start() {
             ai_player = players.item(i).value;
         }
     }
-    tl = tls[level_range.value - 1];
-    tl_idx = level_range.value - 1;
-    console.log("tl", tl);
-    console.log("initializing AI", _init_ai(ai_player, 16, 16));
+    depth = level_depth[level_range.value];
+    level_idx = level_range.value;
+    console.log("depth", depth);
+    _init_ai(ai_player, depth, win_read_depth, book_depth);
+    console.log("sent params to AI")
     n_stones = 4;
     if (ai_player == 0){
-        direction = 0;
         move(4, 5);
     } else {
         show(-1, -1);
-        if (show_value && ai_player != player) {
-            var table = document.getElementById("board");
-            for (var y = 0; y < 8; ++y) {
-                for (var x = 0; x < 8; ++x) {
-                    if (grid[y][x] == 2) {
-                        table.rows[y].cells[x].firstChild.innerText = "50";
-                    }
-                }
-            }
-        }
     }
+    setInterval(ai_check, 250);
 }
 
 function show(r, c) {
@@ -183,14 +192,20 @@ function show(r, c) {
     } else {
         table.rows[0].cells[0].firstChild.className = "state_blank";
         table.rows[0].cells[6].firstChild.className = "state_blank";
+        game_end = true;
         end_game();
     }
-    if (r >= 0){
-        if (player == ai_player) {
-            ai();
-        } else if (show_value) {
-            calc_value();
-        }
+    value_calced = false;
+}
+
+function ai_check() {
+    if (game_end){
+        clearInterval(ai_check);
+    } else if (player == ai_player) {
+        ai();
+    } else if (show_value && !value_calced) {
+        calc_value();
+        value_calced = true;
     }
 }
 
@@ -255,54 +270,7 @@ function check_mobility() {
     return res;
 }
 
-function mcts_main(progress){
-    ++mcts_progress;
-    _mcts_main();
-    progress.value = 100 * mcts_progress / div_mcts;
-    progress.innerText = (100 * mcts_progress / div_mcts) + '%';
-    //console.log("progress:", 100 * mcts_progress / div_mcts, "%");
-    if (mcts_progress == div_mcts){
-        mcts_progress = 0;
-        clearInterval(interval_id);
-        val = _mcts_end();
-        var y = Math.floor(val / 1000.0 / hw);
-        var x = Math.floor((val - y * 1000.0 * hw) / 1000.0);
-        var win_rate = val - y * 1000.0 * hw - x * 1000.0;
-        //console.log(y + " " + x + " " + win_rate);
-        move(y, x);
-        update_graph(win_rate);
-        progress.value = 100;
-    }
-}
-
-function book_main(progress){
-    ++mcts_progress;
-    _book_main();
-    progress.value = 100 * mcts_progress / div_mcts;
-    progress.innerText = (100 * mcts_progress / div_mcts) + '%';
-    //console.log("progress:", 100 * mcts_progress / div_mcts, "%");
-    if (mcts_progress == div_mcts){
-        mcts_progress = 0;
-        clearInterval(interval_id);
-        progress.value = 100;
-        val = _book();
-        var y = Math.floor(val / 1000.0 / hw);
-        var x = Math.floor((val - y * 1000.0 * hw) / 1000.0);
-        var win_rate = val - y * 1000.0 * hw - x * 1000.0;
-        move(y, x);
-        update_graph(win_rate);
-        console.log('ai', ai_player, 'pl', player);
-    }
-}
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 async function ai() {
-    var tl_div = Math.ceil(tl / div_mcts);
-    if (n_stones > 40)
-        tl_div = Math.ceil(tl_div / 5);
     let res = [
         -1, -1, -1, -1, -1, -1, -1, -1, 
         -1, -1, -1, -1, -1, -1, -1, -1, 
@@ -326,28 +294,14 @@ async function ai() {
     var pointer = _malloc(hw2 * 4);
     var offset = pointer / 4;
     HEAP32.set(res, offset);
-    var mode = _start_ai(pointer, tl_div, direction);
+    var val = _ai(pointer);
     _free(pointer);
-    console.log('mode', mode);
-    var val = -1.0;
-    var progress = document.getElementById("progress");
-    progress.value = 0;
-    if (mode == 0) {
-        mcts_progress = 0;
-        interval_id = setInterval(mcts_main, 1, progress);
-    } else if (mode == 1){
-        await sleep(100);
-        val = _complete();
-        var y = Math.floor(val / 1000.0 / hw);
-        var x = Math.floor((val - y * 1000.0 * hw) / 1000.0);
-        var win_rate = val - y * 1000.0 * hw - x * 1000.0;
-        move(y, x);
-        update_graph(win_rate);
-        console.log('ai', ai_player, 'pl', player);
-    } else {
-        mcts_progress = 0;
-        interval_id = setInterval(book_main, 1, progress);
-    }
+    var y = Math.floor(val / 1000.0 / hw);
+    var x = Math.floor((val - y * 1000.0 * hw) / 1000.0);
+    var win_rate = val - y * 1000.0 * hw - x * 1000.0;
+    console.log('y', y, 'x', x, 'win_rate', win_rate);
+    move(y, x);
+    update_graph(win_rate);
 }
 
 function calc_value() {
@@ -489,14 +443,14 @@ function end_game() {
     if (stones[ai_player] < stones[1 - ai_player]) {
         document.getElementById('result_text').innerHTML = "あなたの勝ち！";
         var dis = stones[1 - ai_player] - stones[ai_player];
-        tweet_str = "世界17位のオセロAIのレベル8中「" + tl_names[tl_idx] + "」に" + dis + "石勝ちしました！ :)";
+        tweet_str = "世界17位のオセロAIのレベル8中「" + level_names[level_idx] + "」に" + dis + "石勝ちしました！ :)";
     } else if (stones[ai_player] > stones[1 - ai_player]) {
         document.getElementById('result_text').innerHTML = "AIの勝ち！";
         var dis = stones[ai_player] - stones[1 - ai_player];
-        tweet_str = "世界17位のオセロAIのレベル8中「" + tl_names[tl_idx] + "」に" + dis + "石負けしました… :(";
+        tweet_str = "世界17位のオセロAIのレベル8中「" + level_names[level_idx] + "」に" + dis + "石負けしました… :(";
     } else {
         document.getElementById('result_text').innerHTML = "引き分け！";
-        tweet_str = "世界17位のオセロAIのレベル8中「" + tl_names[tl_idx] + "」と引き分けました！ :|";
+        tweet_str = "世界17位のオセロAIのレベル8中「" + level_names[level_idx] + "」と引き分けました！ :|";
     }
     var tweet_result = document.getElementById('tweet_result');
     tweet_result.innerHTML = '結果をツイート！<a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-text="' + tweet_str + '" data-url="https://www.egaroucid.nyanyan.dev/" data-hashtags="egaroucid" data-related="takuto_yamana,Nyanyan_Cube" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>';
@@ -506,17 +460,24 @@ function end_game() {
     popup.classList.add('is-show');
     var blackBg = document.getElementById('js-black-bg');
     tweet_result.classList.add('show');
-    var new_game = document.getElementById('new_game');
-    new_game.classList.add('show');
     closePopUp(blackBg);
     function closePopUp(elem) {
         if(!elem) return;
         elem.addEventListener('click', function() {
             popup.classList.remove('is-show');
             tweet_result.classList.remove('show');
-            new_game.classList.remove('show');
         })
     }
+    document.getElementById('start').disabled = false;
+    var show_value_elem = document.getElementById('show_value');
+    show_value_elem.disabled = false;
+    show_value = show_value_elem.checked;
+    var show_graph_elem = document.getElementById('show_graph');
+    show_graph_elem.disabled = false;
+    level_range.disabled = false;
+    let players = document.getElementsByName('ai_player');
+    for (var i = 0; i < 2; ++i)
+        players.item(i).disabled = false;
 }
 
 window.onload = function init() {
