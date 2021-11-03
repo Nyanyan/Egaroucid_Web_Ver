@@ -21,6 +21,8 @@ var book_depth = 47;
 var level_idx = -1;
 let level_names = ['レベル1', 'レベル2', 'レベル3', 'レベル4', 'レベル5', 'レベル6', 'レベル7', 'レベル8', 'レベル9', 'レベル10', 'レベル11', 'レベル12', 'カスタム'];
 let level_depth = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, -1];
+let level_book = [10, 20, 30, 40, 47, 47, 47, 47, 47, 47, 47, 47, -1];
+let level_win_depth = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, -1]
 var game_end = false;
 var value_calced = false;
 var div_mcts = 20;
@@ -74,14 +76,49 @@ var graph = new Chart(ctx, {
 
 const level_range = document.getElementById('ai_level');
 const level_show = document.getElementById('ai_level_label');
+const custom_setting = document.getElementById('custom');
+const book_range = document.getElementById('book');
+const read_range = document.getElementById('read');
+const win_read_range = document.getElementById('win_read');
+const book_label = document.getElementById('book_label');
+const read_label = document.getElementById('read_label');
+const win_read_label = document.getElementById('win_read_label');
 const setCurrentValue = (val) => {
     level_show.innerText = level_names[val];
-    
+    if (level_names[val] == 'カスタム'){
+        custom_setting.style.display = "block";
+    } else {
+        custom_setting.style.display = "none";
+    }
 }
+
 const rangeOnChange = (e) =>{
     setCurrentValue(e.target.value);
 }
 
+const setCurrentValue_book = (val) => {
+    book_label.innerText = book_label.innerText = book_range.value + '手';
+}
+
+const rangeOnChange_book = (e) =>{
+    setCurrentValue_book(e.target.value);
+}
+
+const setCurrentValue_read = (val) => {
+    read_label.innerText = read_label.innerText = read_range.value + '手';
+}
+
+const rangeOnChange_read = (e) =>{
+    setCurrentValue_read(e.target.value);
+}
+
+const setCurrentValue_win_read = (val) => {
+    win_read_label.innerText = win_read_label.innerText = win_read_range.value + '手';
+}
+
+const rangeOnChange_win_read = (e) =>{
+    setCurrentValue_win_read(e.target.value);
+}
 
 function start() {
     for (var y = 0; y < hw; ++y){
@@ -104,7 +141,12 @@ function start() {
     show_value = show_value_elem.checked;
     var show_graph_elem = document.getElementById('show_graph');
     show_graph_elem.disabled = true;
+    book_range.disabled = true;
+    read_range.disabled = true;
+    win_read_range.disabled = true;
     show_graph = show_graph_elem.checked;
+    record = [];
+    document.getElementById('record').innerText = '';
     ai_player = -1;
     let players = document.getElementsByName('ai_player');
     for (var i = 0; i < 2; ++i) {
@@ -114,7 +156,14 @@ function start() {
         }
     }
     depth = level_depth[level_range.value];
+    book_depth = level_book[level_range.value];
+    win_read_depth = level_win_depth[level_range.value];
     level_idx = level_range.value;
+    if (level_names[level_idx] == 'カスタム'){
+        depth = read_range.value;
+        book_depth = book_range.value;
+        win_read_depth = win_read_range.value;
+    }
     console.log("depth", depth);
     _init_ai(ai_player, depth, win_read_depth, book_depth);
     console.log("sent params to AI")
@@ -466,6 +515,7 @@ function end_game() {
         elem.addEventListener('click', function() {
             popup.classList.remove('is-show');
             tweet_result.classList.remove('show');
+            tweet_result.innerHTML = "";
         })
     }
     document.getElementById('start').disabled = false;
@@ -478,11 +528,20 @@ function end_game() {
     let players = document.getElementsByName('ai_player');
     for (var i = 0; i < 2; ++i)
         players.item(i).disabled = false;
+    book_range.disabled = false;
+    read_range.disabled = false;
+    win_read_range.disabled = false;
 }
 
 window.onload = function init() {
     level_range.addEventListener('input', rangeOnChange);
     setCurrentValue(level_range.value);
+    book_range.addEventListener('input', rangeOnChange_book);
+    setCurrentValue_book(book_range.value);
+    read_range.addEventListener('input', rangeOnChange_read);
+    setCurrentValue_read(read_range.value);
+    win_read_range.addEventListener('input', rangeOnChange_win_read);
+    setCurrentValue_win_read(win_read_range.value);
     var container = document.getElementById('chart_container');
     ctx.clientWidth = container.clientWidth;
     ctx.clientHeight = container.clientHeight;

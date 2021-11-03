@@ -177,6 +177,9 @@ html, body {
 .record {
     overflow-wrap: break-word;
 }
+.custom {
+    display: none;
+}
 .popup {
     position: fixed;
     left: 0;
