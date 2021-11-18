@@ -1775,6 +1775,10 @@ inline double output_coord(int policy, int raw_val){
 }
 
 extern "C" int main(){
+    return 0;
+}
+
+extern "C" void first_load_init(){
     cout << "initializing AI" << endl;
     init_pow();
     init_mod3();
@@ -1791,7 +1795,6 @@ extern "C" int main(){
     search_hash_table_init(f_search_table_idx);
     search_hash_table_init(1 - f_search_table_idx);
     cout << "AI iniitialized" << endl;
-    return 0;
 }
 
 extern "C" void init_ai(int a_player, int r_depth, int f_r_depth, int b_depth){

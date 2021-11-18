@@ -44,6 +44,7 @@ var direction = -1;
 var isstart = true;
 var show_value = true;
 var show_graph = true;
+var first_start = true;
 let graph_values = [];
 var ctx = document.getElementById("graph");
 var graph = new Chart(ctx, {
@@ -131,6 +132,10 @@ const rangeOnChange_win_read = (e) =>{
 }
 
 function start() {
+    if (first_start){
+        _first_load_init();
+        first_start = false;
+    }
     for (var y = 0; y < hw; ++y){
         for (var x = 0; x < hw; ++x) {
             grid[y][x] = -1;
@@ -549,7 +554,6 @@ function end_game() {
 }
 
 window.onload = function init() {
-    document.getElementById('start').disabled = true;
     level_range.addEventListener('input', rangeOnChange);
     setCurrentValue(level_range.value);
     book_range.addEventListener('input', rangeOnChange_book);
@@ -615,5 +619,4 @@ window.onload = function init() {
         table.appendChild(row);
     }
     show(-2, -2);
-    document.getElementById('start').disabled = false;
 }
