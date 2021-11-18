@@ -619,4 +619,5 @@ window.onload = function init() {
         table.appendChild(row);
     }
     show(-2, -2);
+    document.getElementById('start').disabled = false;
 }
