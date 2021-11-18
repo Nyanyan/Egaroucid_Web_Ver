@@ -549,6 +549,17 @@ function end_game() {
     win_read_range.disabled = false;
 }
 
+var Module = {
+    'noInitialRun' : false,
+    'onRuntimeInitialized' : onruntimeinitialized
+}
+
+function onruntimeinitialized(){
+    console.log("loaded AI");
+    document.getElementById('start').value = "対局開始";
+    document.getElementById('start').disabled = false;
+}
+
 window.onload = function init() {
     level_range.addEventListener('input', rangeOnChange);
     setCurrentValue(level_range.value);
@@ -618,13 +629,14 @@ window.onload = function init() {
     console.log("loading AI");
     document.getElementById('start').value = "AI読込中";
     document.getElementById('start').disabled = true;
-
+    /*
     Module['onRuntimeInitialized'] = function() {
         console.log("wasm loaded ");
         console.log("loaded AI");
         document.getElementById('start').value = "対局開始";
         document.getElementById('start').disabled = false;
     }
+    */
     /*
     var script = document.createElement('script');
     script.src = "assets/js/ai.js";
