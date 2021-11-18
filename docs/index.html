@@ -11,18 +11,17 @@
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@takuto_yamana" />
         <meta property="og:url" content="https://www.egaroucid.nyanyan.dev" />
-        <meta property="og:title" content="Egaroucid - 世界10位のオセロAI" />
-        <meta property="og:description" content="世界10位のオセロAIと対戦！" />
+        <meta property="og:title" content="Egaroucid - 世界3位のオセロAI" />
+        <meta property="og:description" content="世界3位のオセロAIと対戦！" />
         <meta property="og:image" content="https://raw.githubusercontent.com/Nyanyan/Egaroucid_Web_Ver/master/docs/img.png" />
         <title>Egaroucid</title>
     </head>
     <body>
-        <div class="title">Egaroucid3 - Othello AI</div>
-        <div class="sub_title"><a href="https://www.codingame.com/multiplayer/bot-programming/othello-1/leaderboard" target="_blank">Codingame Othello</a>で世界10位になったAIです。</div>
-        <div align="center">前計算のため、スマホだと読み込みに10秒程度かかることがあります。気長にお待ち下さい。</div>
+        <div class="title">Egaroucid4 - Othello AI</div>
+        <div class="sub_title"><a href="https://www.codingame.com/multiplayer/bot-programming/othello-1/leaderboard" target="_blank">Codingame Othello</a>で世界3位、日本1位になったAIです。</div>
         <div align="center">
             <a class="setting" href="#usage">使い方</a>
-            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-text="世界10位のオセロAI&quot;Egaroucid&quot;と勝負！" data-url="https://www.egaroucid.nyanyan.dev/" data-hashtags="egaroucid" data-related="takuto_yamana,Nyanyan_Cube" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-text="世界3位のオセロAI&quot;Egaroucid&quot;と勝負！" data-url="https://www.egaroucid.nyanyan.dev/" data-hashtags="egaroucid" data-related="takuto_yamana,Nyanyan_Cube" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
         </div>
         <p align="center">
             <input type="radio" class="radio_size" name="ai_player" value="1" id="white" checked><label for="white" class="setting">黒(先手): あなた 白(後手): AI</label>
@@ -30,13 +29,13 @@
         </p>
         <p align="center">
             <span class="setting">AIの強さ</span>
-            <input type="range" id="ai_level" min="0" max="12" step="1" value="2">
+            <input type="range" id="ai_level" min="0" max="14" step="1" value="2">
             <span class="setting" id="ai_level_label"></span>
         </p>
         <div align="center" id="custom" class="custom">
             <p>
                 <span>book使用手数</span>
-                <input type="range" id="book" min="0" max="47" step="1" value="47">
+                <input type="range" id="book" min="0" max="55" step="5" value="55">
                 <span class="setting" id="book_label"></span>
             </p>
             <p>
@@ -45,8 +44,8 @@
                 <span class="setting" id="read_label"></span>
             </p>
             <p>
-                <span>必読みマス数</span>
-                <input type="range" id="win_read" min="1" max="22" step="1" value="16">
+                <span>完全読みマス数</span>
+                <input type="range" id="win_read" min="1" max="18" step="1" value="16">
                 <span class="setting" id="win_read_label"></span>
             </p>
         </div>
@@ -90,7 +89,7 @@
         </div>
         <div id="info" align="center">
             <div class="sub_title">対局情報</div>
-            <div class="sub_sub_title">予想勝率グラフ</div>
+            <div class="sub_sub_title">予想最終石差グラフ</div>
             <div class="chart" id="chart_container">
                 <canvas id="graph"></canvas>
             </div>
@@ -101,14 +100,15 @@
             <div class="sub_title" id="usage">使い方</div>
             <div class="text">
                 手番とAIの強さを選択し、対局開始ボタンを押してください。<br>
-                予想勝率グラフは左が序盤、右が直近の手です。値が大きくなるほどAI有利と判断していて、50が互角です。<br>
-                ヒントは予想勝率(%)を表しています。読み手数が浅いので目安です。<br>
+                予想勝率グラフは左が序盤、右が直近の手です。値が大きくなるほどAI有利と判断していて、0が互角です。<br>
+                予想最終石差を表しています。読み手数が浅いので目安です。<br>
                 グラフ表示をオフにしても対局終了後にグラフが描画されます。<br>
+                ヒントは5手読みの評価値ですので精度は悪めです。さらに、序盤専用の評価関数を作っていないので序盤のヒントは役に立ちません。<br>
             </div>
             <details class="details" id="strength">
                 <summary class="summary">AIの強さ</summary>
                 <div class="text">
-                    AIの強さは序中盤のbook使用手数と先読み手数、終盤の必勝読み手数で調整されます。
+                    AIの強さは序中盤のbook使用手数と先読み手数、終盤の完全読み手数で調整されます。
                     レベルが上がると計算時間が増えるので、様子を見つつ設定してください。<br>
                     カスタムレベルでは自分でパラメータを設定できます。<br>
                     各強さの詳細は以下です。
@@ -118,84 +118,100 @@
                         <td class="text">レベル</td>
                         <td class="text">book</td>
                         <td class="text">読み</td>
-                        <td class="text">必勝読み</td>
+                        <td class="text">完全読み</td>
                     </tr>
                     <tr>
                         <td class="text">1</td>
                         <td class="text">10手</td>
-                        <td class="text">1手</td>
+                        <td class="text">2手</td>
                         <td class="text">5手</td>
                     </tr>
                     <tr>
                         <td class="text">2</td>
                         <td class="text">20手</td>
-                        <td class="text">2手</td>
+                        <td class="text">3手</td>
                         <td class="text">6手</td>
                     </tr>
                     <tr>
                         <td class="text">3</td>
                         <td class="text">30手</td>
-                        <td class="text">3手</td>
+                        <td class="text">4手</td>
                         <td class="text">7手</td>
                     </tr>
                     <tr>
                         <td class="text">4</td>
                         <td class="text">40手</td>
-                        <td class="text">4手</td>
+                        <td class="text">5手</td>
                         <td class="text">8手</td>
                     </tr>
                     <tr>
                         <td class="text">5</td>
-                        <td class="text">47手</td>
-                        <td class="text">5手</td>
+                        <td class="text">50手</td>
+                        <td class="text">6手</td>
                         <td class="text">9手</td>
                     </tr>
                     <tr>
                         <td class="text">6</td>
-                        <td class="text">47手</td>
-                        <td class="text">6手</td>
+                        <td class="text">55手</td>
+                        <td class="text">7手</td>
                         <td class="text">10手</td>
                     </tr>
                     <tr>
                         <td class="text">7</td>
-                        <td class="text">47手</td>
-                        <td class="text">7手</td>
+                        <td class="text">55手</td>
+                        <td class="text">8手</td>
                         <td class="text">11手</td>
                     </tr>
                     <tr>
                         <td class="text">8</td>
-                        <td class="text">47手</td>
-                        <td class="text">8手</td>
+                        <td class="text">55手</td>
+                        <td class="text">9手</td>
                         <td class="text">12手</td>
                     </tr>
                     <tr>
                         <td class="text">9</td>
-                        <td class="text">47手</td>
-                        <td class="text">9手</td>
+                        <td class="text">55手</td>
+                        <td class="text">10手</td>
                         <td class="text">13手</td>
                     </tr>
                     <tr>
                         <td class="text">10</td>
-                        <td class="text">47手</td>
-                        <td class="text">10手</td>
+                        <td class="text">55手</td>
+                        <td class="text">11手</td>
                         <td class="text">14手</td>
                     </tr>
                     <tr>
                         <td class="text">11</td>
-                        <td class="text">47手</td>
-                        <td class="text">11手</td>
+                        <td class="text">55手</td>
+                        <td class="text">12手</td>
                         <td class="text">15手</td>
                     </tr>
                     <tr>
                         <td class="text">12</td>
-                        <td class="text">47手</td>
-                        <td class="text">12手</td>
+                        <td class="text">55手</td>
+                        <td class="text">13手</td>
                         <td class="text">16手</td>
+                    </tr>
+                    <tr>
+                        <td class="text">13</td>
+                        <td class="text">55手</td>
+                        <td class="text">14手</td>
+                        <td class="text">17手</td>
+                    </tr>
+                    <tr>
+                        <td class="text">14</td>
+                        <td class="text">55手</td>
+                        <td class="text">15手</td>
+                        <td class="text">18手</td>
                     </tr>
                 </table>
             </details>
             <div align="center" class="rect">
                 <div class="sub_title">お知らせ</div>
+                <details class="details">
+                    <summary class="summary_small">AI(Egaroucid4へ)のアップデートについて</summary>
+                    AIを大幅にアップデートしました。レベルの基準は以前のものと大きく異なります。
+                </details>
                 <details class="details">
                     <summary class="summary_small">AIの再アップデートについて</summary>
                     AIを大幅にアップデートしました。それに伴いカスタムレベルを機能に追加しました。レベルの基準は以前のものと大きく異なります。
@@ -220,11 +236,11 @@
                 </details>
             </div>
             <details class="details" id="achievement">
-                <summary class="summary">世界10位、世界17位について</summary>
+                <summary class="summary">世界3位、世界10位、世界17位について</summary>
                 <div  class="text">
                     このAIの旧バージョン(初代Egaroucid)は2021年6月28日に<a href="https://www.codingame.com/multiplayer/bot-programming/othello-1/leaderboard" target="_blank">Codingame Othello</a>で世界10位を獲得しました。
-                    その後初代Egaroucidの順位は世界20位まで落ちてしまい、新たにEgaroucid2を制作しました。こちらは2021年10月16日に世界17位になりました。さらに改良を進め、3代目のEgaroucid3で2021年11月3日、再び世界10位になりました。<br>
-                    しかし、このコンテストは規模が小さめですので、Edaxなどの世界的な強豪と比較するととても弱いと思います。今後も強くしていきますのでよろしくお願いいたします。
+                    その後初代Egaroucidの順位は世界20位まで落ちてしまい、新たにEgaroucid2を制作しました。こちらは2021年10月16日に世界17位になりました。さらに改良を進め、3代目のEgaroucid3で2021年11月3日、再び世界10位になりました。さらに、高速化などの改良をしたEgaroucid4で2021年11月18日、世界3位になりました。<br>
+                    このAIは同じ読み深さであればWZebraに勝利できるほど強いですが、このWeb版では計算リソースの問題でそこまで強くない場合があります。ご了承ください。
                 </div>
             </details>
             <div align="center" class="rect">
@@ -255,12 +271,19 @@
                         終盤は速さ優先探索と最終1手最適化を行った必勝読みを使用しています。
                     </div>
                 </details>
+                <details class="details">
+                    <summary class="summary_small">Egaroucid4</summary>
+                    <div class="text">
+                        Egaroucid4はEgaroucid3のアルゴリズムを踏襲し、高速化と評価関数の精度向上、さらにMulti Prob Cutという枝刈りを導入しました。<br>
+                        この改善により、高速に精度良く深い探索ができるようになりました。
+                    </div>
+                </details>
             </div>
             <div align="center">
                 <div class="sub_title">Made by にゃにゃん(山名琢翔)</div>
                 <p class="text">不具合報告はTwitterやGitHubでお願いします。</p>
                 <div class="text">
-                    <a href="https://github.com/Nyanyan/Egaroucid3" target="_blank">使われているAIのGitHubレポジトリ</a><br>
+                    <a href="https://github.com/Nyanyan/Egaroucid4" target="_blank">使われているAIのGitHubレポジトリ</a><br>
                     <a href="https://github.com/Nyanyan/Egaroucid_Web_Ver" target="_blank">このページのGitHubレポジトリ</a><br>
                     <a href="https://nyanyan.github.io/" target="_blank">Webサイト</a><br>
                     <a href="https://twitter.com/takuto_yamana" target="_blank">Twitter(作品投稿)</a><br>
@@ -435,6 +458,20 @@
                             <ul>
                                 <li>AIを大幅にアップデートした</li>
                                 <li>カスタムレベルを追加</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="logs">2021/11/19 00:30</td>
+                        <td class="logs">
+                            [仕様変更]<br>
+                            <ul>
+                                <li>AIを大幅にアップデートした</li>
+                                <li>読み込みを高速にした</li>
+                            </ul>
+                            [表示変更]<br>
+                            <ul>
+                                <li>石を返すアニメーションを作った</li>
                             </ul>
                         </td>
                     </tr>

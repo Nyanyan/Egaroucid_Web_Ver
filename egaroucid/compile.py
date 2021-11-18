@@ -2,7 +2,7 @@ import subprocess
 
 with open('ai.cpp', 'r') as f:
     ai = f.read()
-with open('param_compress.txt', 'r') as f:
+with open('param_compress.txt', 'r', encoding='utf-8') as f:
     param = f.read()
 ai = ai.replace('REPLACE_PARAM_HERE', param)
 with open('book.txt', 'r') as f:
@@ -13,7 +13,7 @@ for i in range(0, len(book), 300):
 book_proc += ';'
 ai = ai.replace('REPLACE_BOOK_HERE', book_proc)
 #ai = ai.replace('    ', '')
-with open('ai_compress.cpp', 'w') as f:
+with open('ai_compress.cpp', 'w', encoding='utf-8') as f:
     f.write(ai)
 print('----------------file created----------------')
 #cmd = 'g++ ai_compress.cpp -O3 -march=native -fexcess-precision=fast -funroll-loops -flto -mtune=native -o ai.out'

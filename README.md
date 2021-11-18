@@ -1,10 +1,10 @@
 # Egaroucid Webバージョン
 
-これはかつて世界10位のオセロAI”Egaroucid3”のWeb公開用レポジトリです。
+これは世界3位のオセロAI”Egaroucid4”のWeb公開用レポジトリです。
 
 AIのレポジトリは以下です。
 
-https://github.com/Nyanyan/Egaroucid3
+https://github.com/Nyanyan/Egaroucid4
 
 WebAssembly(wasm)を使うことで静的に公開しています。
 

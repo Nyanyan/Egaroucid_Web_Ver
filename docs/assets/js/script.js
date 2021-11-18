@@ -12,6 +12,16 @@ let grid = [
     [-1, -1, -1, -1, -1, -1, -1, -1],
     [-1, -1, -1, -1, -1, -1, -1, -1]
 ];
+let bef_grid = [
+    [-1, -1, -1, -1, -1, -1, -1, -1],
+    [-1, -1, -1, -1, -1, -1, -1, -1],
+    [-1, -1, -1, -1, -1, -1, -1, -1],
+    [-1, -1, -1, -1, -1, -1, -1, -1],
+    [-1, -1, -1, -1, -1, -1, -1, -1],
+    [-1, -1, -1, -1, -1, -1, -1, -1],
+    [-1, -1, -1, -1, -1, -1, -1, -1],
+    [-1, -1, -1, -1, -1, -1, -1, -1]
+];
 var n_stones = 4;
 var player = 0;
 var ai_player = -1;
@@ -19,10 +29,10 @@ var depth = 0;
 var win_read_depth = 16;
 var book_depth = 47;
 var level_idx = -1;
-let level_names = ['レベル1', 'レベル2', 'レベル3', 'レベル4', 'レベル5', 'レベル6', 'レベル7', 'レベル8', 'レベル9', 'レベル10', 'レベル11', 'レベル12', 'カスタム'];
-let level_depth = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, -1];
-let level_book = [10, 20, 30, 40, 47, 47, 47, 47, 47, 47, 47, 47, -1];
-let level_win_depth = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, -1]
+let level_names = ['レベル1', 'レベル2', 'レベル3', 'レベル4', 'レベル5', 'レベル6', 'レベル7', 'レベル8', 'レベル9', 'レベル10', 'レベル11', 'レベル12', 'レベル13', 'レベル14', 'カスタム'];
+let level_depth = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, -1];
+let level_book = [10, 20, 30, 40, 50, 55, 55, 55, 55, 55, 55, 55, 55, 55, -1];
+let level_win_depth = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, -1]
 var game_end = false;
 var value_calced = false;
 var div_mcts = 20;
@@ -42,7 +52,7 @@ var graph = new Chart(ctx, {
     labels: [],
     datasets: [
         {
-        label: '予想勝率',
+        label: '予想最終石差',
         data: [],
         fill: false,
         borderColor: "rgb(0,0,0)",
@@ -62,9 +72,9 @@ var graph = new Chart(ctx, {
         scales: {
             yAxes: [{
             ticks: {
-                max: 110,
-                min: -10,
-                stepSize: 10,
+                suggestedMax: 5.0,
+                suggestedMin: -5.0,
+                stepSize: 5.0,
                 callback: function(value, index, values){
                     return  value
                 }
@@ -122,8 +132,10 @@ const rangeOnChange_win_read = (e) =>{
 
 function start() {
     for (var y = 0; y < hw; ++y){
-        for (var x = 0; x < hw; ++x)
+        for (var x = 0; x < hw; ++x) {
             grid[y][x] = -1;
+            bef_grid[y][x] = -1;
+        }
     }
     grid[3][3] = 1
     grid[3][4] = 0
@@ -188,11 +200,15 @@ function show(r, c) {
         for (var x = 0; x < 8; ++x) {
             table.rows[y].cells[x].style.backgroundColor = "#249972";
             if (grid[y][x] == 0) {
-                table.rows[y].cells[x].firstChild.className ="black_stone";
-                table.rows[y].cells[x].setAttribute('onclick', "");
+                if (bef_grid[y][x] != 0) {
+                    table.rows[y].cells[x].innerHTML = '<span class="black_stone"></span>';
+                    table.rows[y].cells[x].setAttribute('onclick', "");
+                }
             } else if (grid[y][x] == 1) {
-                table.rows[y].cells[x].firstChild.className ="white_stone";
-                table.rows[y].cells[x].setAttribute('onclick', "");
+                if (bef_grid[y][x] != 1) {
+                    table.rows[y].cells[x].innerHTML = '<span class="white_stone"></span>';
+                    table.rows[y].cells[x].setAttribute('onclick', "");
+                }
             } else if (grid[y][x] == 2) {
                 if (r == -1 || inside(r, c)) {
                     if (player == 0) {
@@ -200,13 +216,9 @@ function show(r, c) {
                     } else {
                         table.rows[y].cells[x].firstChild.className ="legal_stone_white";
                     }
-                    table.rows[y].cells[x].firstChild.innerText = "";
-                    if (player != ai_player) {
-                        table.rows[y].cells[x].setAttribute('onclick', "move(this.parentNode.rowIndex, this.cellIndex)");
-                    } else {
-                        table.rows[y].cells[x].setAttribute('onclick', "");
-                    }
+                    table.rows[y].cells[x].setAttribute('onclick', "move(this.parentNode.rowIndex, this.cellIndex)");
                 } else {
+                    //table.rows[y].cells[x].innerHTML = '<span class="empty_stone"></span>';
                     table.rows[y].cells[x].firstChild.className ="empty_stone";
                     table.rows[y].cells[x].setAttribute('onclick', "");
                 }
@@ -343,14 +355,15 @@ async function ai() {
     var pointer = _malloc(hw2 * 4);
     var offset = pointer / 4;
     HEAP32.set(res, offset);
-    var val = _ai(pointer);
+    var val = _ai(pointer) + 0.005;
     _free(pointer);
-    var y = Math.floor(val / 1000.0 / hw);
-    var x = Math.floor((val - y * 1000.0 * hw) / 1000.0);
-    var win_rate = val - y * 1000.0 * hw - x * 1000.0;
-    console.log('y', y, 'x', x, 'win_rate', win_rate);
+    console.log('val', val);
+    var y = Math.floor(val / 1000 / hw);
+    var x = Math.floor((val - y * 1000 * hw) / 1000);
+    var dif_stones = val - y * 1000 * hw - x * 1000 - 100.0;
+    console.log('y', y, 'x', x, 'dif_stones', dif_stones);
     move(y, x);
-    update_graph(win_rate);
+    update_graph(dif_stones);
 }
 
 function calc_value() {
@@ -404,6 +417,11 @@ function move(y, x) {
             direction = 3;
         else
             direction = 2;
+    }
+    for (var yy = 0; yy < hw; ++yy) {
+        for (var xx = 0; xx < hw; ++xx) {
+            bef_grid[yy][xx] = grid[yy][xx];
+        }
     }
     grid[y][x] = player;
     for (var dr = 0; dr < 8; ++dr) {
@@ -476,12 +494,6 @@ function end_game() {
             }
         }
     }
-    var data_json = {};
-    if (stones[ai_player] > stones[1 - ai_player]) {
-        data_json["a"] = 'win';
-    } else {
-        data_json["a"] = 'lose';
-    }
     html2canvas(document.getElementById('main'),{
         onrendered: function(canvas){
             var imgData = canvas.toDataURL();
@@ -489,17 +501,20 @@ function end_game() {
         }
     });
     var tweet_str = "";
+    var hint = "ヒントなし";
+    if (show_value)
+        hint = "ヒントあり"
     if (stones[ai_player] < stones[1 - ai_player]) {
         document.getElementById('result_text').innerHTML = "あなたの勝ち！";
-        var dis = stones[1 - ai_player] - stones[ai_player];
-        tweet_str = "世界10位のオセロAIの" + level_names[level_idx] + "に" + dis + "石勝ちしました！ :)";
+        var dis = stones[1 - ai_player] - stones[ai_player] + hw2 - stones[ai_player] - stones[1 - ai_player];
+        tweet_str = "世界3位のオセロAIの" + level_names[level_idx] + hint + "に" + dis + "石勝ちしました！ :)";
     } else if (stones[ai_player] > stones[1 - ai_player]) {
         document.getElementById('result_text').innerHTML = "AIの勝ち！";
-        var dis = stones[ai_player] - stones[1 - ai_player];
-        tweet_str = "世界10位のオセロAIの" + level_names[level_idx] + "に" + dis + "石負けしました… :(";
+        var dis = stones[ai_player] - stones[1 - ai_player] + hw2 - stones[ai_player] - stones[1 - ai_player];
+        tweet_str = "世界3位のオセロAIの" + level_names[level_idx] + hint + "に" + dis + "石負けしました… :(";
     } else {
         document.getElementById('result_text').innerHTML = "引き分け！";
-        tweet_str = "世界10位のオセロAIの" + level_names[level_idx] + "と引き分けました！ :|";
+        tweet_str = "世界3位のオセロAIの" + level_names[level_idx] + hint + "と引き分けました！ :|";
     }
     var tweet_result = document.getElementById('tweet_result');
     tweet_result.innerHTML = '結果をツイート！<a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-text="' + tweet_str + '" data-url="https://www.egaroucid.nyanyan.dev/" data-hashtags="egaroucid" data-related="takuto_yamana,Nyanyan_Cube" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>';
