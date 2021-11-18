@@ -1,3 +1,4 @@
+var instance;
 var hw = 8;
 var hw2 = 64;
 let dy = [0, 1, 0, -1, 1, 1, -1, -1];
@@ -44,7 +45,6 @@ var direction = -1;
 var isstart = true;
 var show_value = true;
 var show_graph = true;
-var first_start = true;
 let graph_values = [];
 var ctx = document.getElementById("graph");
 var graph = new Chart(ctx, {
@@ -132,10 +132,6 @@ const rangeOnChange_win_read = (e) =>{
 }
 
 function start() {
-    if (first_start){
-        _first_load_init();
-        first_start = false;
-    }
     for (var y = 0; y < hw; ++y){
         for (var x = 0; x < hw; ++x) {
             grid[y][x] = -1;
@@ -619,9 +615,17 @@ window.onload = function init() {
         table.appendChild(row);
     }
     show(-2, -2);
+    console.log("loading AI");
     document.getElementById('start').value = "AI読込中";
     document.getElementById('start').disabled = true;
-    console.log("loading AI");
+
+    Module['onRuntimeInitialized'] = function() {
+        console.log("wasm loaded ");
+        console.log("loaded AI");
+        document.getElementById('start').value = "対局開始";
+        document.getElementById('start').disabled = false;
+    }
+    /*
     var script = document.createElement('script');
     script.src = "assets/js/ai.js";
     script.onload = function() {
@@ -630,4 +634,5 @@ window.onload = function init() {
         document.getElementById('start').disabled = false;
     }
     document.getElementsByTagName("body")[0].appendChild(script);
+    */
 }

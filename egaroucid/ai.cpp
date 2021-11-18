@@ -1775,10 +1775,6 @@ inline double output_coord(int policy, int raw_val){
 }
 
 extern "C" int main(){
-    return 0;
-}
-
-extern "C" void first_load_init(){
     cout << "initializing AI" << endl;
     init_pow();
     init_mod3();
