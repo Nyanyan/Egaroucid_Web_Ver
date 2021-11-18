@@ -619,5 +619,15 @@ window.onload = function init() {
         table.appendChild(row);
     }
     show(-2, -2);
-    document.getElementById('start').disabled = false;
+    document.getElementById('start').value = "AI読込中";
+    document.getElementById('start').disabled = true;
+    console.log("loading AI");
+    var script = document.createElement('script');
+    script.src = "assets/js/ai.js";
+    script.onload = function() {
+        console.log("loaded AI");
+        document.getElementById('start').value = "対局開始";
+        document.getElementById('start').disabled = false;
+    }
+    document.getElementsByTagName("body")[0].appendChild(script);
 }
