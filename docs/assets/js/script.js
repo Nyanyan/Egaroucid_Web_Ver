@@ -619,5 +619,5 @@ window.onload = function init() {
         table.appendChild(row);
     }
     show(-2, -2);
-    document.getElementById('start').disabled = false;
+    document.getElementById('div_start').innerHTML = '<input type="submit" class="setting" value="対局開始" onclick="start()" id="start">';
 }
