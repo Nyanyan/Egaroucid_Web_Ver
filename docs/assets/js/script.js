@@ -549,6 +549,7 @@ function end_game() {
 }
 
 window.onload = function init() {
+    document.getElementById('start').disabled = true;
     level_range.addEventListener('input', rangeOnChange);
     setCurrentValue(level_range.value);
     book_range.addEventListener('input', rangeOnChange_book);
