@@ -519,7 +519,7 @@ function end_game() {
     }
     var tweet_result = document.getElementById('tweet_result');
     tweet_result.innerHTML = '結果をツイート！<a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-text="' + tweet_str + '" data-url="https://www.egaroucid.nyanyan.dev/" data-hashtags="egaroucid" data-related="takuto_yamana,Nyanyan_Cube" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>';
-    twttr.widgets.load();
+    //twttr.widgets.load();
     var popup = document.getElementById('js-popup');
     if(!popup) return;
     popup.classList.add('is-show');
