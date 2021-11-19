@@ -187,7 +187,6 @@ function start() {
         show(-1, -1);
     }
     setInterval(ai_check, 250);
-    end_game();
 }
 
 function show(r, c) {
