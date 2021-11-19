@@ -79,7 +79,6 @@ html, body {
     background-color: rgb(0, 0, 0);
     border-radius: 3vmin;
     display: inline-block;
-    animation: flip 0.4s forwards;
 }
 .white_stone {
     text-align: center;
@@ -90,7 +89,6 @@ html, body {
     background-color: rgb(255, 255, 255);
     border-radius: 3vmin;
     display: inline-block;
-    animation: flip 0.4s forwards;
 }
 @keyframes flip {
     0% {
