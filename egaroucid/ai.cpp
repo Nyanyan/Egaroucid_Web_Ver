@@ -13,7 +13,7 @@
 #include <string>
 #include <unordered_map>
 #include <random>
-#include <thread>
+#include <time.h>
 
 using namespace std;
 
@@ -82,7 +82,8 @@ struct board{
 
 struct book_node{
     int k[4];
-    int policy;
+    int policies[35];
+    int size;
     book_node* p_n_node;
 };
 
@@ -151,17 +152,21 @@ search_node search_replace_table[2][search_hash_table_size];
 long long searched_nodes, hash_conf, hash_get, hash_reg;
 int f_search_table_idx;
 REPLACE_PARAM_HERE
-/*
-double pattern_arr[n_phases][n_patterns][max_evaluate_idx];
-double add_arr[n_phases][max_canput * 2 + 1][max_surround + 1][max_surround + 1][n_add_dense1];
-double all_dense[n_phases][n_all_input];
-double all_bias[n_phases];
-*/
 
 int ai_player;
 int read_depth;
 int final_read_depth;
 int book_depth;
+
+mt19937 raw_myrandom(time(0));
+
+inline double myrandom(){
+    return (double)raw_myrandom() / random_device::max();
+}
+
+inline int myrandrange(int s, int e){
+    return s +(int)((e - s) * myrandom());
+}
 
 inline unsigned long long calc_hash(const int *p){
     return
@@ -444,7 +449,8 @@ inline book_node* book_node_init(const int *key, int policy){
     p_node = (book_node*)malloc(sizeof(book_node));
     for (int i = 0; i < 4; ++i)
         p_node->k[i] = key[i * 2] + key[i * 2 + 1] * n_line;
-    p_node->policy = policy;
+    p_node->policies[0] = policy;
+    p_node->size = 1;
     p_node->p_n_node = NULL;
     return p_node;
 }
@@ -458,7 +464,7 @@ inline void register_book(book_node** hash_table, const int *key, int hash, int 
         p_pre_node = p_node;
         while(p_node != NULL){
             if(compare_key(key, p_node->k)){
-                p_node->policy = policy;
+                p_node->policies[p_node->size++] = policy;
                 return;
             }
             p_pre_node = p_node;
@@ -472,7 +478,7 @@ inline int get_book(const int *key){
     book_node *p_node = book[calc_hash(key) & book_hash_mask];
     while(p_node != NULL){
         if(compare_key(key, p_node->k)){
-            return p_node->policy;
+            return p_node->policies[myrandrange(0, p_node->size)];
         }
         p_node = p_node->p_n_node;
     }
@@ -1445,6 +1451,7 @@ inline double output_coord(int policy, int raw_val){
 
 extern "C" int main(){
     cout << "initializing AI" << endl;
+    cout << myrandom() << endl;
     init_pow();
     init_mod3();
     init_pop_mid();
