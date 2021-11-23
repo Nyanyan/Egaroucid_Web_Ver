@@ -155,7 +155,7 @@ int ai_player;
 int read_depth;
 int final_read_depth;
 int book_depth;
-/*
+
 int xorx=123456789, xory=362436069, xorz=521288629, xorw=88675123;
 inline double myrandom(){
     int t = (xorx^(xorx<<11));
@@ -169,7 +169,7 @@ inline double myrandom(){
 inline int myrandrange(int s, int e){
     return s +(int)((e - s) * myrandom());
 }
-*/
+
 inline unsigned long long calc_hash(const int *p){
     return
         p[0] + 
@@ -480,7 +480,7 @@ inline int get_book(const int *key){
     book_node *p_node = book[calc_hash(key) & book_hash_mask];
     while(p_node != NULL){
         if(compare_key(key, p_node->k)){
-            return p_node->policies[0]; //[myrandrange(0, p_node->size)];
+            return p_node->policies[myrandrange(0, p_node->size)];
         }
         p_node = p_node->p_n_node;
     }
@@ -1471,8 +1471,8 @@ extern "C" int main(){
 }
 
 extern "C" void init_ai(int a_player, int r_depth, int f_r_depth, int b_depth, int seed){
-    //xorw = seed;
-    //cout << myrandom() << endl;
+    xorw = seed;
+    cout << myrandom() << endl;
     ai_player = a_player;
     read_depth = r_depth;
     final_read_depth = f_r_depth;
