@@ -12,7 +12,6 @@
 #include <chrono>
 #include <string>
 #include <unordered_map>
-#include <random>
 
 using namespace std;
 
@@ -157,10 +156,14 @@ int read_depth;
 int final_read_depth;
 int book_depth;
 
-mt19937 raw_myrandom;
-
+int xorx=123456789, xory=362436069, xorz=521288629, xorw=88675123;
 inline double myrandom(){
-    return (double)raw_myrandom() / mt19937::max();
+    int t = (xorx^(xorx<<11));
+    xorx = xory;
+    xory = xorz;
+    xorz = xorw;
+    xorw = (xorw^(xorw>>19))^(t^(t>>8));
+    return (double)(xorw) / 2147483648.0;
 }
 
 inline int myrandrange(int s, int e){
@@ -1468,7 +1471,7 @@ extern "C" int main(){
 }
 
 extern "C" void init_ai(int a_player, int r_depth, int f_r_depth, int b_depth, int seed){
-    raw_myrandom.seed(seed);
+    xorw = seed;
     cout << myrandom() << endl;
     ai_player = a_player;
     read_depth = r_depth;
