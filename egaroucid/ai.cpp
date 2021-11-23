@@ -80,7 +80,7 @@ struct board{
 
 struct book_node{
     int k[4];
-    int policies[35];
+    int policies[20];
     int size;
     book_node* p_n_node;
 };
