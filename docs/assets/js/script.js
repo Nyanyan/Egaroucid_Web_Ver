@@ -180,7 +180,7 @@ function start() {
         win_read_depth = win_read_range.value;
     }
     console.log("depth", depth);
-    _init_ai(ai_player, depth, win_read_depth, book_depth);
+    _init_ai(ai_player, depth, win_read_depth, book_depth, Math.floor(Math.random() * 2000000000));
     console.log("sent params to AI")
     n_stones = 4;
     if (ai_player == 0){

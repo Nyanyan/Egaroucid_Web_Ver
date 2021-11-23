@@ -13,7 +13,6 @@
 #include <string>
 #include <unordered_map>
 #include <random>
-#include <time.h>
 
 using namespace std;
 
@@ -158,10 +157,10 @@ int read_depth;
 int final_read_depth;
 int book_depth;
 
-mt19937 raw_myrandom(time(0));
+mt19937 raw_myrandom;
 
 inline double myrandom(){
-    return (double)raw_myrandom() / random_device::max();
+    return (double)raw_myrandom() / mt19937::max();
 }
 
 inline int myrandrange(int s, int e){
@@ -1451,7 +1450,6 @@ inline double output_coord(int policy, int raw_val){
 
 extern "C" int main(){
     cout << "initializing AI" << endl;
-    cout << myrandom() << endl;
     init_pow();
     init_mod3();
     init_pop_mid();
@@ -1469,7 +1467,9 @@ extern "C" int main(){
     cout << "AI iniitialized" << endl;
 }
 
-extern "C" void init_ai(int a_player, int r_depth, int f_r_depth, int b_depth){
+extern "C" void init_ai(int a_player, int r_depth, int f_r_depth, int b_depth, int seed){
+    raw_myrandom.seed(seed);
+    cout << myrandom() << endl;
     ai_player = a_player;
     read_depth = r_depth;
     final_read_depth = f_r_depth;
