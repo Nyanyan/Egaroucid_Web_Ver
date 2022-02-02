@@ -4,7 +4,6 @@
         <meta charset="utf-8">
         <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
-        <script src="assets/js/ai.js"></script>
         <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
         <script id="twitter-wjs" src="https://platform.twitter.com/widgets.js"></script>
         <link rel="stylesheet" href="assets/css/style.css">
@@ -38,7 +37,7 @@
             <input type="checkbox" id="show_graph" checked><label class="setting" for="show_graph">対局中グラフ表示</label>
         </p>
         <div align="center" id="div_start">
-            <input type="submit" class="setting" value="AI初期化中" onclick="start()" id="start" disabled>
+            <input type="submit" class="setting" value="AI読込中" onclick="start()" id="start" disabled>
         </div>
         <div class="popup" id="js-popup">
             <div class="popup-inner">
@@ -538,6 +537,7 @@
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.js"></script>
+        <script src="assets/js/ai.js"></script>
         <script src="assets/js/script.js"></script>
     </body>
 </html>

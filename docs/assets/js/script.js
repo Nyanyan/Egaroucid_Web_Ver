@@ -559,7 +559,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     show(-2, -2);
     console.log("loading AI");
-    document.getElementById('start').value = "AI初期化中";
+    //document.getElementById('start').value = "AI初期化中";
     document.getElementById('start').disabled = true;
     /*
     var worker = new Worker("assets/js/init_worker.js");
@@ -572,16 +572,23 @@ document.addEventListener("DOMContentLoaded", function() {
     }, false);
     worker.postMessage('init');
     */
-    try{
-        _initialize_ai();
-        console.log("loaded AI");
-        document.getElementById('start').value = "対局開始";
-        document.getElementById('start').disabled = false;
-    } catch(exception){
-        console.error(exception);
-        document.getElementById('start').value = "AI初期化失敗";
-        document.getElementById('start').disabled = true;
-    }
+    setInterval(try_initialize_ai, 250);
     //ai_init_p();
     //setInterval(check_initialized, 250);
 });
+
+function try_initialize_ai(){
+    if (document.getElementById('start').value == 'AI初期化中'){
+        try{
+            _initialize_ai();
+            console.log("loaded AI");
+            document.getElementById('start').value = "対局開始";
+            document.getElementById('start').disabled = false;
+        } catch(exception){
+            console.error(exception);
+            document.getElementById('start').value = "AI初期化失敗";
+            document.getElementById('start').disabled = true;
+        }
+        clearInterval(try_initialize_ai);
+    }
+}
