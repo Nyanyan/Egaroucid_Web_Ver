@@ -485,7 +485,7 @@ function end_game() {
     for (var i = 0; i < 2; ++i)
         players.item(i).disabled = false;
 }
-/*
+
 var Module = {
     'noInitialRun' : false,
     'onRuntimeInitialized' : onruntimeinitialized
@@ -496,7 +496,6 @@ function onruntimeinitialized(){
     document.getElementById('start').value = "対局開始";
     document.getElementById('start').disabled = false;
 }
-*/
 
 window.onload = function init() {
     level_range.addEventListener('input', rangeOnChange);
@@ -559,6 +558,8 @@ window.onload = function init() {
     }
     show(-2, -2);
     console.log("loading AI");
+    document.getElementById('start').value = "AI読込中";
+    document.getElementById('start').disabled = true;
     /*
     Module['onRuntimeInitialized'] = function() {
         console.log("wasm loaded ");
@@ -577,8 +578,4 @@ window.onload = function init() {
     }
     document.getElementsByTagName("body")[0].appendChild(script);
     */
-    document.getElementById('start').disabled = true;
-    _init_ai();
-    document.getElementById('start').value = "対局開始";
-    document.getElementById('start').disabled = false;
 }

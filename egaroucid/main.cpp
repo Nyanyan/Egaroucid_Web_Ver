@@ -109,7 +109,7 @@ inline int output_coord(int policy, int raw_val){
     return 1000 * policy + 100 + raw_val;
 }
 
-extern "C" void init_ai(){
+extern "C" int main(){
     cout << "initializing AI" << endl;
     init();
     cout << "AI iniitialized" << endl;
