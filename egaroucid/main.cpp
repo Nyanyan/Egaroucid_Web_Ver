@@ -109,10 +109,11 @@ inline int output_coord(int policy, int raw_val){
     return 1000 * policy + 100 + raw_val;
 }
 
-extern "C" int main(){
+extern "C" int initialize_ai(){
     cout << "initializing AI" << endl;
     init();
     cout << "AI iniitialized" << endl;
+    return 0;
 }
 
 extern "C" double ai(int *arr_board, int level, int ai_player){

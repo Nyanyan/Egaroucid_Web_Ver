@@ -38,6 +38,7 @@ var step = 0;
 var isstart = true;
 var show_value = true;
 var show_graph = true;
+var ai_initialized = 1;
 let graph_values = [];
 var ctx = document.getElementById("graph");
 var graph = new Chart(ctx, {
@@ -485,7 +486,7 @@ function end_game() {
     for (var i = 0; i < 2; ++i)
         players.item(i).disabled = false;
 }
-
+/*
 var Module = {
     'noInitialRun' : false,
     'onRuntimeInitialized' : onruntimeinitialized
@@ -496,7 +497,7 @@ function onruntimeinitialized(){
     document.getElementById('start').value = "対局開始";
     document.getElementById('start').disabled = false;
 }
-
+*/
 window.onload = function init() {
     level_range.addEventListener('input', rangeOnChange);
     setCurrentValue(level_range.value);
@@ -558,24 +559,29 @@ window.onload = function init() {
     }
     show(-2, -2);
     console.log("loading AI");
-    document.getElementById('start').value = "AI読込中";
+    document.getElementById('start').value = "AI初期化中";
     document.getElementById('start').disabled = true;
     /*
-    Module['onRuntimeInitialized'] = function() {
-        console.log("wasm loaded ");
+    var worker = new Worker("assets/js/init_worker.js");
+    worker.addEventListener('message', function(e) {
+        console.log('Worker said: ', e.data);
+        ai_initialized = e.data;
         console.log("loaded AI");
         document.getElementById('start').value = "対局開始";
         document.getElementById('start').disabled = false;
-    }
+    }, false);
+    worker.postMessage('init');
     */
-    /*
-    var script = document.createElement('script');
-    script.src = "assets/js/ai.js";
-    script.onload = function() {
+    try{
+        _initialize_ai();
         console.log("loaded AI");
         document.getElementById('start').value = "対局開始";
         document.getElementById('start').disabled = false;
+    } catch(exception){
+        console.log();
+        document.getElementById('start').value = "AI初期化失敗";
+        document.getElementById('start').disabled = true;
     }
-    document.getElementsByTagName("body")[0].appendChild(script);
-    */
+    //ai_init_p();
+    //setInterval(check_initialized, 250);
 }

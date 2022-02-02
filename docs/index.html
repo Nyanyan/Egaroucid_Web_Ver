@@ -37,7 +37,7 @@
             <input type="checkbox" id="show_graph" checked><label class="setting" for="show_graph">対局中グラフ表示</label>
         </p>
         <div align="center" id="div_start">
-            <input type="submit" class="setting" value="AI読込中" onclick="start()" id="start" disabled>
+            <input type="submit" class="setting" value="AI初期化中" onclick="start()" id="start" disabled>
         </div>
         <div class="popup" id="js-popup">
             <div class="popup-inner">
@@ -514,12 +514,21 @@
                             </ul>
                         </td>
                     </tr>
+                    <tr>
+                        <td class="logs">2022/2/2 23:30</td>
+                        <td class="logs">
+                            [バグ修正]<br>
+                            <ul>
+                                <li>読み込みが終わらないバグを修正。<br>まだ読み込み時の描画など問題はある。</li>
+                            </ul>
+                        </td>
+                    </tr>
                 </table>
             </details>
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.js"></script>
-        <script src="assets/js/script.js"></script>
         <script src="assets/js/ai.js"></script>
+        <script src="assets/js/script.js"></script>
     </body>
 </html>
