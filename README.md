@@ -1,8 +1,8 @@
 # Egaroucid Webバージョン
 
-これは世界1位のオセロAI”Egaroucid4”のWeb公開用レポジトリです。
+これは世界1位のオセロAI”Egaroucid5 Light”のWeb公開用レポジトリです。
 
-AIのレポジトリは以下です。
+AI(搭載アプリアプリ)のレポジトリは以下です。
 
 https://github.com/Nyanyan/Egaroucid5
 
