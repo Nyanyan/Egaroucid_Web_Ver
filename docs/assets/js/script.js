@@ -577,6 +577,7 @@ window.onload = function init() {
     }
     document.getElementsByTagName("body")[0].appendChild(script);
     */
+    document.getElementById('start').disabled = true;
     _init_ai();
     document.getElementById('start').value = "対局開始";
     document.getElementById('start').disabled = false;
