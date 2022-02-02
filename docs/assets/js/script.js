@@ -578,7 +578,7 @@ window.onload = function init() {
         document.getElementById('start').value = "対局開始";
         document.getElementById('start').disabled = false;
     } catch(exception){
-        console.log();
+        console.error(exception);
         document.getElementById('start').value = "AI初期化失敗";
         document.getElementById('start').disabled = true;
     }
