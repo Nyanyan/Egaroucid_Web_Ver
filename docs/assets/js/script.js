@@ -498,7 +498,7 @@ function onruntimeinitialized(){
     document.getElementById('start').disabled = false;
 }
 */
-window.onload = function init() {
+document.addEventListener("DOMContentLoaded", function() {
     level_range.addEventListener('input', rangeOnChange);
     setCurrentValue(level_range.value);
     var container = document.getElementById('chart_container');
@@ -584,4 +584,4 @@ window.onload = function init() {
     }
     //ai_init_p();
     //setInterval(check_initialized, 250);
-}
+});
