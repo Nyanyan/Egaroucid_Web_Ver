@@ -26,14 +26,8 @@ let bef_grid = [
 var n_stones = 4;
 var player = 0;
 var ai_player = -1;
-var depth = 0;
-var win_read_depth = 16;
-var book_depth = 47;
-var level_idx = -1;
-let level_names = ['レベル1', 'レベル2', 'レベル3', 'レベル4', 'レベル5', 'レベル6', 'レベル7', 'レベル8', 'レベル9', 'レベル10', 'レベル11', 'レベル12', 'レベル13', 'レベル14', 'カスタム'];
-let level_depth = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, -1];
-let level_book = [10, 20, 30, 40, 50, 55, 55, 55, 55, 55, 55, 55, 55, 55, -1];
-let level_win_depth = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, -1]
+var level_idx = 0;
+let level_names = ['レベル0', 'レベル1', 'レベル2', 'レベル3', 'レベル4', 'レベル5', 'レベル6', 'レベル7', 'レベル8', 'レベル9', 'レベル10'];
 var game_end = false;
 var value_calced = false;
 var div_mcts = 20;
@@ -41,10 +35,10 @@ var mcts_progress = 0;
 var interval_id = -1;
 let record = [];
 var step = 0;
-var direction = -1;
 var isstart = true;
 var show_value = true;
 var show_graph = true;
+var ai_initialized = 1;
 let graph_values = [];
 var ctx = document.getElementById("graph");
 var graph = new Chart(ctx, {
@@ -73,9 +67,9 @@ var graph = new Chart(ctx, {
         scales: {
             yAxes: [{
             ticks: {
-                suggestedMax: 5.0,
-                suggestedMin: -5.0,
-                stepSize: 5.0,
+                suggestedMax: 10.0,
+                suggestedMin: -10.0,
+                stepSize: 10.0,
                 callback: function(value, index, values){
                     return  value
                 }
@@ -88,19 +82,8 @@ var graph = new Chart(ctx, {
 const level_range = document.getElementById('ai_level');
 const level_show = document.getElementById('ai_level_label');
 const custom_setting = document.getElementById('custom');
-const book_range = document.getElementById('book');
-const read_range = document.getElementById('read');
-const win_read_range = document.getElementById('win_read');
-const book_label = document.getElementById('book_label');
-const read_label = document.getElementById('read_label');
-const win_read_label = document.getElementById('win_read_label');
 const setCurrentValue = (val) => {
     level_show.innerText = level_names[val];
-    if (level_names[val] == 'カスタム'){
-        custom_setting.style.display = "block";
-    } else {
-        custom_setting.style.display = "none";
-    }
 }
 
 const rangeOnChange = (e) =>{
@@ -113,22 +96,6 @@ const setCurrentValue_book = (val) => {
 
 const rangeOnChange_book = (e) =>{
     setCurrentValue_book(e.target.value);
-}
-
-const setCurrentValue_read = (val) => {
-    read_label.innerText = read_label.innerText = read_range.value + '手';
-}
-
-const rangeOnChange_read = (e) =>{
-    setCurrentValue_read(e.target.value);
-}
-
-const setCurrentValue_win_read = (val) => {
-    win_read_label.innerText = win_read_label.innerText = win_read_range.value + '手';
-}
-
-const rangeOnChange_win_read = (e) =>{
-    setCurrentValue_win_read(e.target.value);
 }
 
 function start() {
@@ -156,9 +123,6 @@ function start() {
     show_value = show_value_elem.checked;
     var show_graph_elem = document.getElementById('show_graph');
     show_graph_elem.disabled = true;
-    book_range.disabled = true;
-    read_range.disabled = true;
-    win_read_range.disabled = true;
     show_graph = show_graph_elem.checked;
     record = [];
     document.getElementById('record').innerText = '';
@@ -170,24 +134,10 @@ function start() {
             ai_player = players.item(i).value;
         }
     }
-    depth = level_depth[level_range.value];
-    book_depth = level_book[level_range.value];
-    win_read_depth = level_win_depth[level_range.value];
     level_idx = level_range.value;
-    if (level_names[level_idx] == 'カスタム'){
-        depth = read_range.value;
-        book_depth = book_range.value;
-        win_read_depth = win_read_range.value;
-    }
-    console.log("depth", depth);
-    _init_ai(ai_player, depth, win_read_depth, book_depth, Math.floor(Math.random() * 2000000000));
-    console.log("sent params to AI")
+    console.log("level", level_idx);
     n_stones = 4;
-    if (ai_player == 0){
-        move(4, 5);
-    } else {
-        show(-1, -1);
-    }
+    show(-1, -1);
     setInterval(ai_check, 250);
 }
 
@@ -358,12 +308,12 @@ async function ai() {
     var pointer = _malloc(hw2 * 4);
     var offset = pointer / 4;
     HEAP32.set(res, offset);
-    var val = _ai(pointer) + 0.005;
+    var val = _ai(pointer, level_idx, ai_player);
     _free(pointer);
     console.log('val', val);
     var y = Math.floor(val / 1000 / hw);
     var x = Math.floor((val - y * 1000 * hw) / 1000);
-    var dif_stones = val - y * 1000 * hw - x * 1000 - 100.0;
+    var dif_stones = val - y * 1000 * hw - x * 1000 - 100;
     console.log('y', y, 'x', x, 'dif_stones', dif_stones);
     move(y, x);
     update_graph(dif_stones);
@@ -394,7 +344,7 @@ function calc_value() {
     var pointer_value = _malloc((hw2 + 10) * n_byte);
     var pointer = _malloc(hw2 * n_byte);
     HEAP32.set(res, pointer / n_byte);
-    _calc_value(pointer, 25, direction, pointer_value);
+    _calc_value(pointer, pointer_value, 2, ai_player);
     _free(pointer);
     var output_array = new Int32Array(HEAP32.buffer, pointer_value, hw2 + 10);
     _free(pointer_value);
@@ -410,17 +360,6 @@ function calc_value() {
 }
 
 function move(y, x) {
-    if (isstart) {
-        isstart = false;
-        if (x == 5)
-            direction = 0;
-        else if (x == 4)
-            direction = 1;
-        else if (x == 3)
-            direction = 3;
-        else
-            direction = 2;
-    }
     for (var yy = 0; yy < hw; ++yy) {
         for (var xx = 0; xx < hw; ++xx) {
             bef_grid[yy][xx] = grid[yy][xx];
@@ -546,11 +485,8 @@ function end_game() {
     let players = document.getElementsByName('ai_player');
     for (var i = 0; i < 2; ++i)
         players.item(i).disabled = false;
-    book_range.disabled = false;
-    read_range.disabled = false;
-    win_read_range.disabled = false;
 }
-
+/*
 var Module = {
     'noInitialRun' : false,
     'onRuntimeInitialized' : onruntimeinitialized
@@ -561,16 +497,10 @@ function onruntimeinitialized(){
     document.getElementById('start').value = "対局開始";
     document.getElementById('start').disabled = false;
 }
-
-window.onload = function init() {
+*/
+document.addEventListener("DOMContentLoaded", function() {
     level_range.addEventListener('input', rangeOnChange);
     setCurrentValue(level_range.value);
-    book_range.addEventListener('input', rangeOnChange_book);
-    setCurrentValue_book(book_range.value);
-    read_range.addEventListener('input', rangeOnChange_read);
-    setCurrentValue_read(read_range.value);
-    win_read_range.addEventListener('input', rangeOnChange_win_read);
-    setCurrentValue_win_read(win_read_range.value);
     var container = document.getElementById('chart_container');
     ctx.clientWidth = container.clientWidth;
     ctx.clientHeight = container.clientHeight;
@@ -629,24 +559,36 @@ window.onload = function init() {
     }
     show(-2, -2);
     console.log("loading AI");
-    document.getElementById('start').value = "AI読込中";
+    //document.getElementById('start').value = "AI初期化中";
     document.getElementById('start').disabled = true;
     /*
-    Module['onRuntimeInitialized'] = function() {
-        console.log("wasm loaded ");
+    var worker = new Worker("assets/js/init_worker.js");
+    worker.addEventListener('message', function(e) {
+        console.log('Worker said: ', e.data);
+        ai_initialized = e.data;
         console.log("loaded AI");
         document.getElementById('start').value = "対局開始";
         document.getElementById('start').disabled = false;
-    }
+    }, false);
+    worker.postMessage('init');
     */
-    /*
-    var script = document.createElement('script');
-    script.src = "assets/js/ai.js";
-    script.onload = function() {
-        console.log("loaded AI");
-        document.getElementById('start').value = "対局開始";
-        document.getElementById('start').disabled = false;
+    setInterval(try_initialize_ai, 250);
+    //ai_init_p();
+    //setInterval(check_initialized, 250);
+});
+
+function try_initialize_ai(){
+    if (document.getElementById('start').value == 'AI初期化中'){
+        try{
+            _initialize_ai();
+            console.log("loaded AI");
+            document.getElementById('start').value = "対局開始";
+            document.getElementById('start').disabled = false;
+        } catch(exception){
+            console.error(exception);
+            document.getElementById('start').value = "AI初期化失敗";
+            document.getElementById('start').disabled = true;
+        }
+        clearInterval(try_initialize_ai);
     }
-    document.getElementsByTagName("body")[0].appendChild(script);
-    */
 }
