@@ -1,3 +1,5 @@
+**このレポジトリは運用を終了し、[Egaroucid](https://github.com/Nyanyan/Egaroucid/)に内容を統合し、アップデートしています。**
+
 # Egaroucid Webバージョン
 
 これは世界1位のオセロAI”Egaroucid5 Light”のWeb公開用レポジトリです。
